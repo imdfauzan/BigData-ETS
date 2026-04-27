@@ -1,0 +1,27 @@
+version: '3'
+services:
+  zookeeper:
+    image: zookeeper:3.8
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - bigdata-network
+
+  kafka:
+    image: wurstmeister/kafka:latest
+    container_name: kafka-broker
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "pangan-api:1:1,pangan-rss:1:1" # Ini otomatis buat topic!
+    depends_on:
+      - zookeeper
+    networks:
+      - bigdata-network
+
+networks:
+  bigdata-network:
+    external: true
