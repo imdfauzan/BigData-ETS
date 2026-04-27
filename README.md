@@ -53,3 +53,20 @@ docker exec -it namenode hdfs dfs -chmod -R 777 /data/pangan
 docker exec -it namenode hdfs dfs -ls -R /data/pangan/
 ```
 ![Infrastruktur Docker HDFS (localhost:9870/explorer.html#/data/pangan)](assets/infrastrukurfolder-fauzan.png)
+
+### Aaron - Anggota 4
+- Membuat file `spark/analysis.ipynb`.
+- Mengonversi Jupyter Notebook menjadi skrip Python independen `spark/analysis.py` agar dapat dijalankan via terminal.
+- Memperbaiki konfigurasi koneksi URI HDFS Spark ke `hdfs://localhost:9000/` menyesuaikan dengan port mapping dari Docker.
+- Membuat *mock data* JSON (data tiruan) langsung ke HDFS untuk pengujian.
+- Berhasil mengeksekusi analisis data dan menyimpannya kembali ke HDFS serta lokal.
+
+Cara menjalankan analisis Spark (`spark/analysis.py`):
+
+```bash
+# Menjalankan menggunakan spark-submit (pastikan PySpark terinstal)
+spark-submit spark/analysis.py
+
+# Atau jalankan menggunakan Python biasa
+python3 spark/analysis.py
+```

@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "generated_by": "Theodorus Aaron Ugraha (Anggota 4)",
+    "pipeline": "HargaPangan-Kelompok6",
+    "total_data_api": 4,
+    "total_data_rss": 3
+  },
+  "analisis_1_volatilitas": [
+    {
+      "komoditas": "beras",
+      "label": "Beras Premium",
+      "harga_max": 12000.0,
+      "harga_min": 10500.0,
+      "harga_avg": 11166.67,
+      "harga_stddev": 763.76,
+      "jumlah_data": 3,
+      "indeks_volatilitas": 13.43
+    },
+    {
+      "komoditas": "jagung",
+      "label": "Jagung Piper",
+      "harga_max": 13000.0,
+      "harga_min": 13000.0,
+      "harga_avg": 13000.0,
+      "harga_stddev": NaN,
+      "jumlah_data": 1,
+      "indeks_volatilitas": 0.0
+    }
+  ],
+  "analisis_2_tren_harga": [
+    {
+      "komoditas": "jagung",
+      "label": "Jagung Piper",
+      "harga_rata2_keseluruhan": 13000.0,
+      "harga_terendah_sepanjang": 13000.0,
+      "harga_tertinggi_sepanjang": 13000.0,
+      "jumlah_hari": 1,
+      "total_observasi": 1
+    },
+    {
+      "komoditas": "beras",
+      "label": "Beras Premium",
+      "harga_rata2_keseluruhan": 11166.67,
+      "harga_terendah_sepanjang": 10500.0,
+      "harga_tertinggi_sepanjang": 12000.0,
+      "jumlah_hari": 1,
+      "total_observasi": 3
+    }
+  ],
+  "analisis_3_korelasi_berita": [
+    {
+      "komoditas": "beras",
+      "label": "Beras Premium",
+      "indeks_volatilitas": 13.43,
+      "harga_avg": 11166.67,
+      "jumlah_sebutan": 1,
+      "status_korelasi": "WASPADA — harga bergejolak tapi minim liputan"
+    },
+    {
+      "komoditas": "jagung",
+      "label": "Jagung Piper",
+      "indeks_volatilitas": 0.0,
+      "harga_avg": 13000.0,
+      "jumlah_sebutan": 1,
+      "status_korelasi": "RENDAH — stabil dan minim berita"
+    }
+  ]
+}
