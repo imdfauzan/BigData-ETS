@@ -31,6 +31,70 @@ docker-compose -f docker-compose-hadoop.yml up -d
 docker-compose -f docker-compose-kafka.yml up -d
 ```
 
+Buat Folder di HDFS
+```bash
+# buat folder di hdfs
+docker exec -it namenode hdfs dfs -mkdir -p /data/pangan/api
+docker exec -it namenode hdfs dfs -mkdir -p /data/pangan/rss
+docker exec -it namenode hdfs dfs -mkdir -p /data/pangan/hasil
+
+# beri akses hadoop 
+docker exec -it namenode hdfs dfs -chmod -R 777 /data/pangan
+```
+
+### 2. Setup Virtual Environment & Install Dependencies
+```bash
+# Setup Virtual Environment
+python -m venv venv
+venv\Scripts\Activate
+```
+
+```bash
+# Install Dependencies
+pip install kafka-python requests
+pip install flask
+``` 
+
+Install Java Versi 11 atau 17 jika belum.
+```bash
+# Install Java di Powershell
+winget install Microsoft.OpenJDK.17
+# Restart VS Code / Terminal setelah menginstall java
+``` 
+
+### 3. Jalankan Producer & Consumer
+Buka **4 Terminal** Berbeda dan aktifkan virtual environment di setiap terminal tersebut.
+- Terminal 1
+```bash
+venv\Scripts\Activate
+# Jalankan producer API
+python kafka/producer_api.py
+```
+- Terminal 2
+```bash
+venv\Scripts\Activate
+# Jalankan producer RSS
+python kafka/producer_rss.py
+```
+- Terminal 3
+```bash
+venv\Scripts\Activate
+# Jalankan consumer
+python kafka/consumer_to_hdfs.py
+```
+- Terminal 4
+```bash
+venv\Scripts\Activate
+# Jalankan Flask Dashboard
+python flask/app.py
+```
+
+### 4. Jalankan Spark
+```bash
+# Jalankan Spark
+python spark/analysis.py
+```
+
 ## 🛠️ Dokumentasi Pengerjaan
 ### Fauzan - Anggota 1
 - Membuat Repo Github `https://github.com/imdfauzan/BigData-ETS`
