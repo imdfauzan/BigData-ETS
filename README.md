@@ -90,6 +90,10 @@ docker exec -it namenode hdfs dfs -ls -R /data/pangan/
 ```
  
 ```bash
+
+# Install python dependency
+pip install kafka-python requests
+
 # Menjalankan producer API
 python kafka/producer_api.py
  
