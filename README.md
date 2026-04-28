@@ -185,7 +185,8 @@ docker exec -it namenode hdfs dfs -ls /data/pangan/rss/
 Cara menjalankan analisis Spark (`spark/analysis.py`):
 
 ```bash
-# Menjalankan menggunakan spark-submit (pastikan PySpark terinstal)
+# Menjalankan menggunakan spark-submit
+pip install pyspark
 spark-submit spark/analysis.py
 
 # Atau jalankan menggunakan Python biasa
