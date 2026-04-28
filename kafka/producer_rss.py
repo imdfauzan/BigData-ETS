@@ -34,6 +34,7 @@ POLL_INTERVAL  = 5 * 60   # 5 menit dalam detik
 # Daftar RSS feed berita komoditas pangan Indonesia
 # Gunakan beberapa sumber agar data lebih kaya
 RSS_FEEDS = [
+    "https://rss.bisnis.com/feed/rss2/ekonomi",
     "https://www.kontan.co.id/rss/bisnis",            # bisnis/komoditas
     "https://ekonomi.bisnis.com/feed/rss",            # ekonomi bisnis
     "https://rss.detik.com/index.php/detikfinance",   # detikfinance
