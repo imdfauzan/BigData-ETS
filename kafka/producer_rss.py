@@ -34,11 +34,12 @@ POLL_INTERVAL  = 5 * 60   # 5 menit dalam detik
 # Daftar RSS feed berita komoditas pangan Indonesia
 # Gunakan beberapa sumber agar data lebih kaya
 RSS_FEEDS = [
-    "https://rss.bisnis.com/feed/rss2/ekonomi",
-    "https://www.kontan.co.id/rss/bisnis",            # bisnis/komoditas
-    "https://ekonomi.bisnis.com/feed/rss",            # ekonomi bisnis
-    "https://rss.detik.com/index.php/detikfinance",   # detikfinance
-    "https://katadata.co.id/feed",                    # katadata
+    "hhttps://jatim.news.or.id/rss/category-id/26",
+    "https://jatim.news.or.id/rss/category-id/38",           
+    "https://jatim.news.or.id/rss/category-id/55",            
+    "https://jatim.news.or.id/rss/category-id/59",   
+    "hhttps://jatim.news.or.id/rss/category-id/69", 
+    "https://jatim.news.or.id/rss/category-id/114",                   
 ]
 
 # Kata kunci komoditas yang dipantau (untuk filter berita relevan)
