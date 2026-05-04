@@ -138,8 +138,7 @@ def buat_producer() -> KafkaProducer:
                 bootstrap_servers   = [KAFKA_BROKER],
                 value_serializer    = lambda v: json.dumps(v, ensure_ascii=False).encode("utf-8"),
                 key_serializer      = lambda k: k.encode("utf-8"),
-                acks                = "all",             # tunggu semua replica konfirmasi
-                enable_idempotence  = True,              # hindari duplikat di level Kafka
+                acks                = "all",
                 retries             = 3,
                 linger_ms           = 500,
                 compression_type    = "gzip",
