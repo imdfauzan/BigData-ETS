@@ -176,11 +176,14 @@ docker exec -it kafka-broker kafka-console-consumer.sh \
  
 #### producer_rss.py
  
-Polling 4 RSS feed berita ekonomi/komoditas Indonesia setiap **5 menit**:
-- `kontan.co.id/rss/bisnis`
-- `ekonomi.bisnis.com/feed/rss`
-- `rss.detik.com/index.php/detikfinance`
-- `katadata.co.id/feed`
+Polling RSS feed berita ekonomi/komoditas Indonesia setiap **5 menit**:
+- `https://jatim.news.or.id/rss/category-id/26`
+- `https://jatim.news.or.id/rss/category-id/38`
+- `https://jatim.news.or.id/rss/category-id/55`
+- `https://jatim.news.or.id/rss/category-id/59`
+- `https://jatim.news.or.id/rss/category-id/69`
+- `https://jatim.news.or.id/rss/category-id/114`
+
 **Fitur utama:**
 - Parsing menggunakan library `feedparser` — ekstrak `title`, `link`, `summary`, `published`
 - **Deduplication** via `sent_ids: set` — setiap `entry.link` disimpan; entry yang sama tidak dikirim ulang di polling berikutnya
