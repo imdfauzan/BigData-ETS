@@ -86,7 +86,7 @@ python kafka/consumer_to_hdfs.py
 ```bash
 venv\Scripts\Activate
 # Jalankan Flask Dashboard
-python flask/app.py
+python dashboard/app.py
 ```
 
 ### 4. Jalankan Spark
