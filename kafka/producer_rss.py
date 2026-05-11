@@ -1,16 +1,20 @@
 """
-producer_rss.py — Widi as Anggota 3: Producer RSS Feed
+producer_rss.py — Producer RSS Feed Google News
 Topik 8: HargaPangan - Monitor Harga Komoditas Bahan Pokok
 
 Fungsi:
-  - Polling RSS feed berita pangan setiap 5 menit
-  - Parse feed menggunakan library feedparser
-  - Hindari duplikat dengan menyimpan entry ID/link yang sudah dikirim
-  - Kirim ke Kafka topic 'pangan-rss' dengan key berdasarkan hash URL
+  - Polling RSS feed Google News untuk "harga bahan pangan" setiap 5 menit
+  - Parse RSS feed menggunakan feedparser
+  - Extract: title, description, link, pubDate
+  - Hindari duplikat dengan menyimpan link yang sudah dikirim
+  - Kirim ke Kafka topic 'pangan-rss' sebagai JSON
 
 Kafka Topic  : pangan-rss
-Key          : MD5 dari entry.link
+Key          : MD5 dari entry.link (untuk deduplication)
 Polling      : setiap 5 menit (300 detik)
+
+Google News RSS URL (live & real-time):
+https://news.google.com/rss/search?q=harga+bahan+pangan&hl=id&gl=ID&ceid=ID:id
 """
 
 import json
@@ -18,6 +22,7 @@ import time
 import hashlib
 import logging
 import feedparser
+import requests
 
 from datetime import datetime
 from kafka import KafkaProducer
@@ -30,19 +35,12 @@ from kafka.errors import KafkaError
 KAFKA_BROKER   = "127.0.0.1:9092"
 KAFKA_TOPIC    = "pangan-rss"
 POLL_INTERVAL  = 5 * 60   # 5 menit dalam detik
+REQUEST_TIMEOUT = 10       # timeout request HTTP
 
-# Daftar RSS feed berita komoditas pangan Indonesia
-# Gunakan beberapa sumber agar data lebih kaya
-RSS_FEEDS = [
-    "https://jatim.news.or.id/rss/category-id/26",
-    "https://jatim.news.or.id/rss/category-id/38",           
-    "https://jatim.news.or.id/rss/category-id/55",            
-    "https://jatim.news.or.id/rss/category-id/59",   
-    "https://jatim.news.or.id/rss/category-id/69", 
-    "https://jatim.news.or.id/rss/category-id/114",                   
-]
+# Google News RSS URL - real-time news untuk "harga bahan pangan"
+RSS_FEED_URL = "https://news.google.com/rss/search?q=harga+bahan+pangan&hl=id&gl=ID&ceid=ID:id"
 
-# Kata kunci komoditas yang dipantau (untuk filter berita relevan)
+# Kata kunci komoditas untuk tagging (opsional)
 KOMODITAS_KEYWORDS = {
     "beras"        : ["beras", "padi", "gabah"],
     "jagung"       : ["jagung"],
@@ -75,6 +73,8 @@ def detect_komoditas(text: str) -> str:
     Deteksi komoditas yang dibahas dalam teks berita.
     Return nama komoditas pertama yang ditemukan, atau 'umum' jika tidak ada.
     """
+    if not text:
+        return "umum"
     text_lower = text.lower()
     for komoditas, keywords in KOMODITAS_KEYWORDS.items():
         for kw in keywords:
@@ -88,24 +88,28 @@ def parse_published(entry) -> str:
     Ambil waktu publikasi dari entry feedparser.
     Fallback ke waktu sekarang jika tidak tersedia.
     """
-    if hasattr(entry, "published"):
-        return entry.published
-    if hasattr(entry, "updated"):
-        return entry.updated
+    try:
+        if hasattr(entry, "published"):
+            return entry.published
+        if hasattr(entry, "updated"):
+            return entry.updated
+    except:
+        pass
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def buat_message(entry, feed_url: str) -> dict:
     """
     Bangun payload JSON dari satu entry RSS.
-    Field mengikuti spesifikasi: title, link, summary, published, komoditas, timestamp.
+    Field: title, description, link, published, komoditas, timestamp.
     """
+    import re
+    
     title   = getattr(entry, "title",   "").strip()
     link    = getattr(entry, "link",    "").strip()
+    
+    # Ambil summary/description dan bersihkan HTML tags
     summary = getattr(entry, "summary", "").strip()
-
-    # Bersihkan HTML tag dari summary jika ada
-    import re
     summary_clean = re.sub(r"<[^>]+>", "", summary).strip()
 
     komoditas = detect_komoditas(title + " " + summary_clean)
@@ -113,8 +117,8 @@ def buat_message(entry, feed_url: str) -> dict:
     return {
         # Identitas berita
         "title"       : title,
+        "description" : summary_clean[:500],   # batasi panjang
         "link"        : link,
-        "summary"     : summary_clean[:500],   # batasi panjang
         "published"   : parse_published(entry),
         "source_feed" : feed_url,
 
@@ -159,85 +163,95 @@ def buat_producer() -> KafkaProducer:
 
 def jalankan_producer():
     """
-    Loop utama producer RSS.
-    - Poll semua feed setiap POLL_INTERVAL detik
-    - Deduplication menggunakan set ID entry yang sudah dikirim
+    Loop utama producer RSS Google News.
+    - Poll feed setiap POLL_INTERVAL detik
+    - Deduplication menggunakan set link yang sudah dikirim
     - Setiap entry baru dikirim ke Kafka dengan key = MD5(link)
     """
     log.info("╔══════════════════════════════════════════════════════╗")
     log.info("║  HargaPangan Monitor — producer_rss.py               ║")
-    log.info("║  Anggota 3: Producer RSS Feed                        ║")
+    log.info("║  Google News RSS Feed Polling                        ║")
     log.info("╚══════════════════════════════════════════════════════╝")
-    log.info(f"Kafka Broker  : {KAFKA_BROKER}")
-    log.info(f"Kafka Topic   : {KAFKA_TOPIC}")
-    log.info(f"Poll Interval : {POLL_INTERVAL // 60} menit")
-    log.info(f"RSS Feeds     : {len(RSS_FEEDS)} sumber")
+    log.info(f"Kafka Broker    : {KAFKA_BROKER}")
+    log.info(f"Kafka Topic     : {KAFKA_TOPIC}")
+    log.info(f"Poll Interval   : {POLL_INTERVAL // 60} menit")
+    log.info(f"RSS Feed URL    : {RSS_FEED_URL[:80]}...")
 
     producer = buat_producer()
 
     # Set untuk menyimpan link yang sudah dikirim (deduplication)
-    # Ini adalah IN-MEMORY store; cukup untuk satu sesi runtime.
-    # Untuk persistensi lintas restart, gunakan file atau Redis.
-    sent_ids: set = set()
+    sent_links: set = set()
 
     polling_ke = 0
+
+    # Custom User-Agent untuk menghindari blocking
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    }
 
     try:
         while True:
             polling_ke += 1
             waktu_mulai = datetime.now()
-            log.info(f"\n{'═'*55}")
+            log.info(f"\n{'═'*60}")
             log.info(f"POLLING #{polling_ke} — {waktu_mulai.strftime('%Y-%m-%d %H:%M:%S')}")
-            log.info(f"{'═'*55}")
+            log.info(f"{'═'*60}")
 
             total_baru  = 0
             total_duplikat = 0
 
-            for feed_url in RSS_FEEDS:
-                log.info(f"  Fetching: {feed_url}")
-                try:
-                    feed = feedparser.parse(feed_url)
+            try:
+                # Fetch RSS feed dengan timeout
+                response = requests.get(RSS_FEED_URL, headers=headers, timeout=REQUEST_TIMEOUT)
+                response.raise_for_status()
+                
+                # Parse RSS feed
+                feed = feedparser.parse(response.content)
 
-                    if feed.bozo:
-                        log.warning(f"  [Warn] Feed tidak valid: {feed_url} — {feed.bozo_exception}")
+                if feed.bozo:
+                    log.warning(f"⚠ Feed warning: {feed.bozo_exception}")
 
-                    for entry in feed.entries:
-                        # Gunakan link sebagai ID unik; fallback ke title+published
-                        entry_id = getattr(entry, "link", None) or \
-                                   hashlib.md5(
-                                       (getattr(entry, "title", "") + getattr(entry, "published", "")).encode()
-                                   ).hexdigest()
+                log.info(f"  Ditemukan {len(feed.entries)} entries dalam feed")
 
-                        # Skip jika sudah pernah dikirim (deduplication)
-                        if entry_id in sent_ids:
-                            total_duplikat += 1
-                            continue
+                for entry in feed.entries:
+                    # Gunakan link sebagai ID unik
+                    entry_link = getattr(entry, "link", None) or ""
+                    
+                    if not entry_link:
+                        log.warning(f"  ⚠ Skipped entry tanpa link")
+                        continue
 
-                        # Bangun dan kirim message
-                        msg = buat_message(entry, feed_url)
-                        key = hashlib.md5(entry_id.encode()).hexdigest()
+                    # Skip jika sudah pernah dikirim (deduplication)
+                    if entry_link in sent_links:
+                        total_duplikat += 1
+                        continue
 
-                        try:
-                            future   = producer.send(KAFKA_TOPIC, key=key, value=msg)
-                            metadata = future.get(timeout=10)
-                            sent_ids.add(entry_id)
-                            total_baru += 1
-                            log.info(
-                                f"  ✓ [{msg['komoditas']:15s}] {msg['title'][:60]}"
-                                f" → partition={metadata.partition} offset={metadata.offset}"
-                            )
-                        except KafkaError as e:
-                            log.error(f"  ✗ Gagal kirim: {e} | entry: {entry_id[:40]}")
+                    # Bangun dan kirim message
+                    msg = buat_message(entry, RSS_FEED_URL)
+                    key = hashlib.md5(entry_link.encode()).hexdigest()
 
-                except Exception as e:
-                    log.error(f"  [Error] Gagal fetch feed {feed_url}: {e}")
-                    continue
+                    try:
+                        future   = producer.send(KAFKA_TOPIC, key=key, value=msg)
+                        metadata = future.get(timeout=10)
+                        sent_links.add(entry_link)
+                        total_baru += 1
+                        log.info(
+                            f"  ✓ [{msg['komoditas']:15s}] {msg['title'][:50]}"
+                            f" → offset={metadata.offset}"
+                        )
+                    except KafkaError as e:
+                        log.error(f"  ✗ Gagal kirim ke Kafka: {e}")
+
+            except requests.RequestException as e:
+                log.error(f"  [Error] Gagal fetch RSS feed: {e}")
+            except Exception as e:
+                log.error(f"  [Error] Gagal parse feed: {e}")
 
             producer.flush()
             log.info(f"\nRingkasan polling #{polling_ke}:")
             log.info(f"  Entry baru dikirim : {total_baru}")
             log.info(f"  Duplikat diabaikan : {total_duplikat}")
-            log.info(f"  Total ID tersimpan : {len(sent_ids)}")
+            log.info(f"  Total link terindeks : {len(sent_links)}")
 
             # Hitung waktu tunggu agar interval tetap akurat
             durasi = (datetime.now() - waktu_mulai).total_seconds()
