@@ -268,7 +268,7 @@ start_bronze_lakehouse() {
         print_success "delta-spark installed"
     fi
     
-    python lakehouse/01_bronze.py > "$LOGS_DIR/bronze.log" 2>&1 &
+    python lakehouse/01_bronze.py > "$LOGS_DIR/lakehouse_bronze.log" 2>&1 &
     PID=$!
     echo $PID >> "$PIDS_FILE"
     
@@ -515,8 +515,8 @@ cmd_logs() {
             tail -n $tail_lines "$LOGS_DIR/dashboard.log"
             ;;
         bronze)
-            echo "📋 bronze.log:"
-            tail -n $tail_lines "$LOGS_DIR/bronze.log"
+            echo "📋 lakehouse_bronze.log:"
+            tail -n $tail_lines "$LOGS_DIR/lakehouse_bronze.log"
             ;;
         all)
             echo "📋 All logs (latest 20 lines each):"

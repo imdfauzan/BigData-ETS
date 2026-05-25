@@ -14,13 +14,14 @@ from delta import configure_spark_with_delta_pip
 HDFS_NAMENODE = "localhost"
 HDFS_PORT = "9000"
 BRONZE_OUTPUT_DIR = "./lakehouse_data/bronze"
+LOGS_DIR = "./logs"
 
 # Logging setup
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[
-        logging.FileHandler('lakehouse_bronze.log'),
+        logging.FileHandler(f'{LOGS_DIR}/lakehouse_bronze.log'),
         logging.StreamHandler(sys.stdout)
     ]
 )
