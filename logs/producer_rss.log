@@ -1,0 +1,319 @@
+2026-05-25 14:16:41 [INFO] ╔══════════════════════════════════════════════════════╗
+2026-05-25 14:16:41 [INFO] ║  HargaPangan Monitor — producer_rss.py               ║
+2026-05-25 14:16:41 [INFO] ║  Anggota 3: Producer RSS Feed                        ║
+2026-05-25 14:16:41 [INFO] ╚══════════════════════════════════════════════════════╝
+2026-05-25 14:16:41 [INFO] Kafka Broker  : localhost:9092
+2026-05-25 14:16:41 [INFO] Kafka Topic   : pangan-rss
+2026-05-25 14:16:41 [INFO] Poll Interval : 5 menit
+2026-05-25 14:16:41 [INFO] RSS Feeds     : 3 sumber
+2026-05-25 14:16:41 [INFO] <BrokerConnection node_id=bootstrap-0 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: connecting to localhost:9092 [('127.0.0.1', 9092) IPv4]
+2026-05-25 14:16:41 [INFO] Probing node bootstrap-0 broker version
+2026-05-25 14:16:41 [INFO] <BrokerConnection node_id=bootstrap-0 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: Connection complete.
+2026-05-25 14:16:41 [INFO] Broker version identified as 2.5.0
+2026-05-25 14:16:41 [INFO] Set configuration api_version=(2, 5, 0) to skip auto check_version requests on startup
+2026-05-25 14:16:41 [INFO] [Kafka] Producer terhubung ke localhost:9092
+2026-05-25 14:16:41 [INFO] 
+═══════════════════════════════════════════════════════
+2026-05-25 14:16:41 [INFO] POLLING #1 — 2026-05-25 14:16:41
+2026-05-25 14:16:41 [INFO] ═══════════════════════════════════════════════════════
+2026-05-25 14:16:41 [INFO]   Fetching: https://news.google.com/rss/search?q=harga+bahan+pangan&hl=id&gl=ID&ceid=ID:id
+2026-05-25 14:16:42 [INFO] <BrokerConnection node_id=1 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: connecting to localhost:9092 [('127.0.0.1', 9092) IPv4]
+2026-05-25 14:16:42 [INFO] <BrokerConnection node_id=1 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: Connection complete.
+2026-05-25 14:16:42 [INFO] <BrokerConnection node_id=bootstrap-0 host=localhost:9092 <connected> [IPv4 ('127.0.0.1', 9092)]>: Closing connection. 
+2026-05-25 14:16:43 [INFO]   ✓ [umum           ] GPM Bantu Warga Dapat Kebutuhan Pokok Terjangkau Jelang Idul → partition=0 offset=0
+2026-05-25 14:16:43 [INFO]   ✓ [umum           ] Disperindag Jabar Gelar Pasar Murah Jelang Iduladha, Kebutuh → partition=0 offset=1
+2026-05-25 14:16:44 [INFO]   ✓ [umum           ] Harga-Harga Pangan Mulai Naik Jelang Iduladha, Mendag Bilang → partition=0 offset=2
+2026-05-25 14:16:44 [INFO]   ✓ [umum           ] Jaga Stabilitas Harga, Pemkab Natuna Gelar Pasar Pangan Mura → partition=0 offset=3
+2026-05-25 14:16:45 [INFO]   ✓ [umum           ] Harga Bahan Pangan di Pasar Serpong Naik, Daya Beli Turun -  → partition=0 offset=4
+2026-05-25 14:16:45 [INFO]   ✓ [umum           ] Harga Sembako Hari Ini 25 Mei 2026 Naik Komoditas Bumbu Dapu → partition=0 offset=5
+2026-05-25 14:16:46 [INFO]   ✓ [umum           ] Idul Adha Mendekat, Bahan Pokok Ikut Merangkak - Bloomberg T → partition=0 offset=6
+2026-05-25 14:16:46 [INFO]   ✓ [umum           ] PERKEMBANGAN HARGA RATA-RATA BEBERAPA BAHAN POKOK (SENIN, 25 → partition=0 offset=7
+2026-05-25 14:16:47 [INFO]   ✓ [cabai          ] PIHPS: Cabai Rawit Merah Tembus Rp81.300 Per Kg, Telur Ayam  → partition=0 offset=8
+2026-05-25 14:16:47 [INFO]   ✓ [umum           ] Jelang Iduladha, Harga Pangan Nasional Melonjak - TVRI News → partition=0 offset=9
+2026-05-25 14:16:48 [INFO]   ✓ [umum           ] Khofifah Hadiri Pasar Murah ke-69 di Kediri, Harga Bahan Pok → partition=0 offset=10
+2026-05-25 14:16:48 [INFO]   ✓ [cabai          ] Harga Bahan Pokok di Pasar Klandasan Relatif Stabil, Cabai R → partition=0 offset=11
+2026-05-25 14:16:49 [INFO]   ✓ [cabai          ] Daftar Harga Pangan 25 Mei 2026 Melonjak Drastis Dipimpin Ca → partition=0 offset=12
+2026-05-25 14:16:49 [INFO]   ✓ [umum           ] Maluku lakukan gerakan pangan murah guna stabilkan harga bah → partition=0 offset=13
+2026-05-25 14:16:50 [INFO]   ✓ [umum           ] Satgas Saber Pangan Polda Bali Intensifkan Sidak Pasar untuk → partition=0 offset=14
+2026-05-25 14:16:50 [INFO]   ✓ [cabai          ] Jelang Iduladha, Stok Pangan Aman Namun Harga Cabai Alami Ke → partition=0 offset=15
+2026-05-25 14:16:51 [INFO]   ✓ [umum           ] Menjelang Iduladha, Mendag Pastikan Harga Pangan Stabil - TV → partition=0 offset=16
+2026-05-25 14:16:51 [INFO]   ✓ [umum           ] Video: Bantuan Pangan Diperpanjang, Harga Bahan Pokok Akan S → partition=0 offset=17
+2026-05-25 14:16:52 [INFO]   ✓ [umum           ] Kawal Stabilitas Pangan, Polsek Umbulharjo Amankan Peluncura → partition=0 offset=18
+2026-05-25 14:16:52 [INFO]   ✓ [umum           ] Pemko Tanjungpinang Gelar Pasar Murah Jelang Iduladha, Bantu → partition=0 offset=19
+2026-05-25 14:16:53 [INFO]   ✓ [umum           ] Jelang Ramadan, Pemkot Surabaya Intensifkan Gerakan Pangan M → partition=0 offset=20
+2026-05-25 14:16:53 [INFO]   ✓ [umum           ] Babinsa Koramil 07/Wedi Monitoring Pasar Mundu, Pastikan Sta → partition=0 offset=21
+2026-05-25 14:16:54 [INFO]   ✓ [umum           ] Pemkab Pantau Harga Komoditas Pangan - Berita Kota Makassar → partition=0 offset=22
+2026-05-25 14:16:54 [INFO]   ✓ [umum           ] Stabilkan Harga dan Pasokan Bahan Pokok, Pemkab Pelalawan Ge → partition=0 offset=23
+2026-05-25 14:16:55 [INFO]   ✓ [umum           ] Demi Cegah Lonjakan Harga, Satgas Saber Pangan Polda Bali Si → partition=0 offset=24
+2026-05-25 14:16:55 [INFO]   ✓ [cabai          ] Pasokan Seret, Harga Cabai Merah Melonjak hingga Rp50 Ribu - → partition=0 offset=25
+2026-05-25 14:16:56 [INFO]   ✓ [cabai          ] Harga Pangan Sabtu (23/5) Jelang Iduladha 2026: Cabai-Daging → partition=0 offset=26
+2026-05-25 14:16:56 [INFO]   ✓ [umum           ] Jelang Idul Adha, Khofifah Pastikan Stok dan Harga Pangan di → partition=0 offset=27
+2026-05-25 14:16:57 [INFO]   ✓ [umum           ] Satgas Pangan Kota Palu Pastikan Stok Bahan Pangan Aman Jela → partition=0 offset=28
+2026-05-25 14:16:57 [INFO]   ✓ [cabai          ] Harga Sembako PPU Jelang Iduladha 2026, Cabai Naik, Bawang S → partition=0 offset=29
+2026-05-25 14:16:58 [INFO]   ✓ [umum           ] Tekan Laju Inflasi Jelang Idul Adha, Pemkot Bima Gelar Gerak → partition=0 offset=30
+2026-05-25 14:16:58 [INFO]   ✓ [umum           ] Bulog Maluku adakan pasar murah untuk jaga stabilitas harga  → partition=0 offset=31
+2026-05-25 14:16:59 [INFO]   ✓ [cabai          ] Harga Bawang Merah dan Cabai di Mojokerto Naik, LPG 3 Kg Tem → partition=0 offset=32
+2026-05-25 14:16:59 [INFO]   ✓ [cabai          ] Harga Pangan Hari Ini: Cabai Rawit Merah Tembus Rp73.500 per → partition=0 offset=33
+2026-05-25 14:17:00 [INFO]   ✓ [umum           ] Gerakan Pangan Murah Bojonegoro Bantu Stabilkan Harga Bahan  → partition=0 offset=34
+2026-05-25 14:17:01 [INFO]   ✓ [cabai          ] Data Harga Cabai di Pasar Muara Aman Sejalan dengan Dinas Ke → partition=0 offset=35
+2026-05-25 14:17:01 [INFO]   ✓ [umum           ] Berikut! Perkembangan Harga Bahan Pokok Pangan dan Barang Ke → partition=0 offset=36
+2026-05-25 14:17:02 [INFO]   ✓ [umum           ] Pemkab Kendal dan Pemprov Jateng Salurkan Subsidi Pangan di  → partition=0 offset=37
+2026-05-25 14:17:02 [INFO]   ✓ [umum           ] Harga Bahan Pokok Jabodetabek 22 Mei 2026 Bergerak Variatif  → partition=0 offset=38
+2026-05-25 14:17:03 [INFO]   ✓ [umum           ] Pemprov Maluku sidak pasar pastikan stabilitas harga jelang  → partition=0 offset=39
+2026-05-25 14:17:03 [INFO]   ✓ [umum           ] Stabilisasi Harga pangan Menjelang Bulan Ramadhan, Pemkab Si → partition=0 offset=40
+2026-05-25 14:17:04 [INFO]   ✓ [umum           ] Harga Tiket Mahal Menjalar ke Harga Pangan, Daerah Mulai Was → partition=0 offset=41
+2026-05-25 14:17:04 [INFO]   ✓ [umum           ] Harga Sembako Naik Signifikan - tangerangekspres.disway.id - → partition=0 offset=42
+2026-05-25 14:17:05 [INFO]   ✓ [umum           ] Pelemahan Rupiah Tembus Rp17.668 Picu Lonjakan Harga Pangan  → partition=0 offset=43
+2026-05-25 14:17:06 [INFO]   ✓ [umum           ] Jaga Stabilitas Harga, Pemkot Bima Gelar Gerakan Pangan Mura → partition=0 offset=44
+2026-05-25 14:17:06 [INFO]   ✓ [umum           ] Harga Bahan Pangan di Tangerang Selatan Melonjak Jelang Idul → partition=0 offset=45
+2026-05-25 14:17:07 [INFO]   ✓ [umum           ] Pelemahan Rupiah Menembus Rp17.668 Picu Lonjakan Harga Panga → partition=0 offset=46
+2026-05-25 14:17:07 [INFO]   ✓ [umum           ] Pemkot-Palu pastikan kebutuhan bahan pokok terpenuhi jelang  → partition=0 offset=47
+2026-05-25 14:17:08 [INFO]   ✓ [umum           ] Pemprov Riau Gelar Operasi Pasar Murah di Pekanbaru Jelang I → partition=0 offset=48
+2026-05-25 14:17:08 [INFO]   ✓ [umum           ] Tren Masakan Rumahan Meningkat Tajam Per 22 Mei 2026 Akibat  → partition=0 offset=49
+2026-05-25 14:17:09 [INFO]   ✓ [umum           ] Forkopimda Pekanbaru Waspadai Kenaikan Harga Pangan Jelang I → partition=0 offset=50
+2026-05-25 14:17:09 [INFO]   ✓ [umum           ] Harga Tomat Melonjak Tajam, Tembus Rp25 Ribu per Kilogram -  → partition=0 offset=51
+2026-05-25 14:17:10 [INFO]   ✓ [cabai          ] Harga Pangan Hari Ini (07/5) di Lampung: Harga Cabai Merah d → partition=0 offset=52
+2026-05-25 14:17:10 [INFO]   ✓ [umum           ] Harga Bahan Pokok di Pasar Baru Bekasi Naik, Disperindag: Ma → partition=0 offset=53
+2026-05-25 14:17:11 [INFO]   ✓ [umum           ] Gerakan Pangan Murah Pemko Langsa Diserbu Warga Saat Car Fre → partition=0 offset=54
+2026-05-25 14:17:11 [INFO]   ✓ [umum           ] Kenaikan Harga Pangan Jelang Iduladha, DKI Minta Warga Tak P → partition=0 offset=55
+2026-05-25 14:17:12 [INFO]   ✓ [cabai          ] Jelang Iduladha 2026, Harga Cabai hingga Daging Sapi Kompak  → partition=0 offset=56
+2026-05-25 14:17:12 [INFO]   ✓ [umum           ] Gerakan Pangan Murah di Stand Dinas TPHP Jadi Daya Tarik Kal → partition=0 offset=57
+2026-05-25 14:17:13 [INFO]   ✓ [umum           ] Pemprov Lampung Perkuat Stabilitas Harga Bahan Pangan Lewat  → partition=0 offset=58
+2026-05-25 14:17:13 [INFO]   ✓ [umum           ] Asisten II Pimpin Sidak Pasar Jelang Idul Adha, Pemkot Bima  → partition=0 offset=59
+2026-05-25 14:17:14 [INFO]   ✓ [umum           ] Harga Bahan Pokok Naik Menjelang Nataru, Gubernur Siapkan La → partition=0 offset=60
+2026-05-25 14:17:14 [INFO]   ✓ [umum           ] Jelang Idul Adha, Babinsa Serbelawan Pantau Harga Bahan Poko → partition=0 offset=61
+2026-05-25 14:17:15 [INFO]   ✓ [umum           ] Harga Bahan Pokok di Jadetabek Hari Ini, Berikut Daftar Leng → partition=0 offset=62
+2026-05-25 14:17:15 [INFO]   ✓ [kedelai        ] Sidak Pasar Serpong, Pemkot Tangsel Temukan Mi dan Tahu Berf → partition=0 offset=63
+2026-05-25 14:17:16 [INFO]   ✓ [umum           ] Daftar Harga Pangan di Bali 24 Mei 2026 - IDN Times Bali → partition=0 offset=64
+2026-05-25 14:17:16 [INFO]   ✓ [umum           ] Gerakan Pangan Murah Diserbu Warga Jelang lebaran Idul Adha  → partition=0 offset=65
+2026-05-25 14:17:17 [INFO]   ✓ [umum           ] Info Harga Bahan Pokok di Gorontalo H-3 Jelang Idul Adha 202 → partition=0 offset=66
+2026-05-25 14:17:17 [INFO]   ✓ [umum           ] Gelontorkan Bantuan Pangan hingga Juni, Jurus Pemerintah Tek → partition=0 offset=67
+2026-05-25 14:17:18 [INFO]   ✓ [umum           ] Jelang Idul Adha, Harga Sembako di Pasar Rangkasbitung Merok → partition=0 offset=68
+2026-05-25 14:17:18 [INFO]   ✓ [umum           ] Antisipasi Lonjakan Harga Jelang Idul Adha, Ayu Nur Suri Dor → partition=0 offset=69
+2026-05-25 14:17:19 [INFO]   ✓ [beras          ] Harga Pangan Naik Serentak, Beras hingga Cabai Melonjak Dua  → partition=0 offset=70
+2026-05-25 14:17:19 [INFO]   ✓ [umum           ] Jelang Iduladha, Pemprov DKI Ingatkan Warga Tak Panic Buying → partition=0 offset=71
+2026-05-25 14:17:20 [INFO]   ✓ [umum           ] Tim Satgas Pangan dan TPID Prov. Kalteng Laksanakan Pemantau → partition=0 offset=72
+2026-05-25 14:17:20 [INFO]   ✓ [umum           ] Gubernur Jatim: Pasar murah jelang Idul Adha kendalikan harg → partition=0 offset=73
+2026-05-25 14:17:21 [INFO]   ✓ [umum           ] Pemprov Riau Gelar Pasar Murah untuk Stabilkan Harga Pangan  → partition=0 offset=74
+2026-05-25 14:17:21 [INFO]   ✓ [umum           ] Gubernur Ahmad Luthfi Turun Pasar, Cek Stok dan Harga Bahan  → partition=0 offset=75
+2026-05-25 14:17:22 [INFO]   ✓ [umum           ] Jelang Hari Besar Keagamaan, Ketersediaan dan Stabilitas Har → partition=0 offset=76
+2026-05-25 14:17:22 [INFO]   ✓ [umum           ] Inflasi Lampung Terkendali, Pemprov Lampung Intensifkan Peng → partition=0 offset=77
+2026-05-25 14:17:23 [INFO]   ✓ [umum           ] Intervensi Harga Jelang Idul Adha, Pasar Murah Pemprov Riau  → partition=0 offset=78
+2026-05-25 14:17:24 [INFO]   ✓ [umum           ] Satgas Pangan Polda Bali Perkuat Pengawasan Harga dan Keters → partition=0 offset=79
+2026-05-25 14:17:24 [INFO]   ✓ [umum           ] Maluku gelar pangan murah, MinyaKita dijual Rp15 Ribu - Elsh → partition=0 offset=80
+2026-05-25 14:17:25 [INFO]   ✓ [umum           ] Jelang Lebaran, Harga Bahan Pokok di Bandung Stabil - Jabarp → partition=0 offset=81
+2026-05-25 14:17:25 [INFO]   ✓ [umum           ] Satgas Pangan Polres Lampung Utara Cek Harga Minyak Kita di  → partition=0 offset=82
+2026-05-25 14:17:26 [INFO]   ✓ [umum           ] Redam Kenaikan Harga, Pemprov Jateng Telah Gelar 333 Kali Ge → partition=0 offset=83
+2026-05-25 14:17:26 [INFO]   ✓ [cabai          ] Harga Pangan Hari Ini (20/2) di DKI Jakarta: Cabai Rawit Nai → partition=0 offset=84
+2026-05-25 14:17:27 [INFO]   ✓ [umum           ] Sidak Pasar Amahami, Harga Sembako Stabil di Pertengahan Ram → partition=0 offset=85
+2026-05-25 14:17:27 [INFO]   ✓ [umum           ] Simak Harga Terbaru Bahan-bahan Pokok Hari Ini - MetroTVNews → partition=0 offset=86
+2026-05-25 14:17:28 [INFO]   ✓ [umum           ] ORI Gorontalo pantau stok dan harga pangan di pasar - Ombuds → partition=0 offset=87
+2026-05-25 14:17:28 [INFO]   ✓ [gula           ] Harga Pangan Hari Ini (19/2) di Jawa Barat: Cabai Merah Naik → partition=0 offset=88
+2026-05-25 14:17:29 [INFO]   ✓ [cabai          ] Harga Pangan Hari Ini (05/3) di Jawa Barat: Harga Cabai Rawi → partition=0 offset=89
+2026-05-25 14:17:29 [INFO]   ✓ [umum           ] Pantau Harga Pangan Jelang Ramadan, Sahli Yuas Elko: Harga M → partition=0 offset=90
+2026-05-25 14:17:30 [INFO]   ✓ [umum           ] Jaga Stabilitas Harga, Pemprov Lampung Intensifkan Distribus → partition=0 offset=91
+2026-05-25 14:17:30 [INFO]   ✓ [cabai          ] Update Harga Pangan Pokok Kota Tangerang Menjelang Bulan Ram → partition=0 offset=92
+2026-05-25 14:17:31 [INFO]   ✓ [cabai          ] Lonjakan Harga Bahan Pokok Mengintai Konsumen Jelang Hari Ra → partition=0 offset=93
+2026-05-25 14:17:31 [INFO]   ✓ [cabai          ] Harga Pangan Hari Ini (13/2) di DKI Jakarta: Cabai Merah Nai → partition=0 offset=94
+2026-05-25 14:17:32 [INFO]   ✓ [umum           ] Gerakan Pangan Murah Nagan Raya Hadir untuk Tekan Harga Baha → partition=0 offset=95
+2026-05-25 14:17:32 [INFO]   ✓ [umum           ] Hari Raya Berlalu, Harga Bahan Pokok di Kota Kediri Kembali  → partition=0 offset=96
+2026-05-25 14:17:33 [INFO]   ✓ [umum           ] Polsek Senapelan Rutin Pantau Sembako, Pastikan Stok Aman da → partition=0 offset=97
+2026-05-25 14:17:33 [INFO]   ✓ [umum           ] Arman Nofriansyah Minta Pemerintah Pastikan Stabilitas Harga → partition=0 offset=98
+2026-05-25 14:17:34 [INFO]   ✓ [umum           ] Hari Jadi Kalteng ke-69, Pemprov Subsidi Bahan Pangan Hingga → partition=0 offset=99
+2026-05-25 14:17:34 [INFO]   Fetching: https://news.google.com/rss/search?q=harga+pangan&hl=id&gl=ID&ceid=ID:id
+2026-05-25 14:17:35 [INFO]   ✓ [cabai          ] Harga Pangan Kompak Naik Jelang Idul Adha, Cabai Rawit Tembu → partition=0 offset=100
+2026-05-25 14:17:36 [INFO]   ✓ [cabai          ] Harga Cabai Naik Signifikan, Rawit Merah Tembus Rp73.500/Kg  → partition=0 offset=101
+2026-05-25 14:17:36 [INFO]   ✓ [cabai          ] Harga Pangan Hari Ini 25 Mei: Bawang dan Cabai Kompak Melonj → partition=0 offset=102
+2026-05-25 14:17:37 [INFO]   ✓ [cabai          ] Harga Pangan Jelang Idul Adha 2026: Bawang, Cabai hingga Dag → partition=0 offset=103
+2026-05-25 14:17:37 [INFO]   ✓ [cabai          ] Mendag Sebut Harga Minyakita-Cabai Stabil Jelang Idul Adha - → partition=0 offset=104
+2026-05-25 14:17:38 [INFO]   ✓ [umum           ] DKI kemarin, fluktuasi harga pangan hingga kebakaran di Kali → partition=0 offset=105
+2026-05-25 14:17:39 [INFO]   ✓ [umum           ] Blackout Sumatra Berpotensi Picu Volatilitas Liar Harga Pang → partition=0 offset=106
+2026-05-25 14:17:39 [INFO]   ✓ [umum           ] SURAT EDARAN TENTANG STABILISASI PASOKAN DAN HARGA KOMODITAS → partition=0 offset=107
+2026-05-25 14:17:40 [INFO]   ✓ [umum           ] Polres Kulonprogo Intensif Kawal Harga Pangan dan Awasi Pasa → partition=0 offset=108
+2026-05-25 14:17:40 [INFO]   ✓ [umum           ] BAPPERIDA BANJAR IKUTI RAKOR PENGENDALIAN INFLASI NASIONAL - → partition=0 offset=109
+2026-05-25 14:17:41 [INFO]   ✓ [umum           ] Bapanas Percepat Distribusi Minyakita Kendalikan Harga Panga → partition=0 offset=110
+2026-05-25 14:17:41 [INFO]   ✓ [umum           ] Pemko Tanjungpinang Intervensi Harga Pangan, Wawako Raja Ari → partition=0 offset=111
+2026-05-25 14:17:42 [INFO]   ✓ [umum           ] Pemprov Kalsel Gelar Pasar Murah di Batola, Upaya Jaga Stabi → partition=0 offset=112
+2026-05-25 14:17:42 [INFO]   ✓ [umum           ] Harga Komoditas Pangan Mulai Naik Jelang Iduladha - KONTAN → partition=0 offset=113
+2026-05-25 14:17:43 [INFO]   ✓ [cabai          ] Harga Pangan Hari Ini: Cabai Rawit Merah Rp81.300/Kg, Telur  → partition=0 offset=114
+2026-05-25 14:17:43 [INFO]   ✓ [beras          ] Harga Beras dan Pangan Lainnya di Bali 25 Mei 2026 - IDN Tim → partition=0 offset=115
+2026-05-25 14:17:44 [INFO]   ✓ [gula           ] PIHPS: Harga daging sapi tembus Rp150 ribu per kg, gula prem → partition=0 offset=116
+2026-05-25 14:17:44 [INFO]   ✓ [umum           ] Jelang Iduladha, Pemprov Lampung Intensif Pantau Harga Panga → partition=0 offset=117
+2026-05-25 14:17:45 [INFO]   ✓ [umum           ] Jelang Idul Adha, Pemprov Lampung Intensif Pantau Harga Pang → partition=0 offset=118
+2026-05-25 14:17:45 [INFO]   ✓ [umum           ] GPM Serentak, Pemkab Sidrap Jaga Stabilitas Harga Pangan Jel → partition=0 offset=119
+2026-05-25 14:17:46 [INFO]   ✓ [umum           ] Bapanas: Waktu salur bantuan pangan diperpanjang hingga Juni → partition=0 offset=120
+2026-05-25 14:17:46 [INFO]   ✓ [umum           ] Pemkab Natuna Perkuat Komitmen Jaga Stabilitas Harga Pangan  → partition=0 offset=121
+2026-05-25 14:17:47 [INFO]   ✓ [umum           ] Jelang Iduladha, Pemkot Tangerang Perketat Pemantauan Harga  → partition=0 offset=122
+2026-05-25 14:17:47 [INFO]   ✓ [beras          ] Bansos Pangan Beras dan Minyak Goreng Resmi Diperpanjang hin → partition=0 offset=123
+2026-05-25 14:17:48 [INFO]   ✓ [umum           ] Berita Daerah || Jaga Stabilitas Harga Jelang Idul Adha, Pem → partition=0 offset=124
+2026-05-25 14:17:48 [INFO]   ✓ [cabai          ] Daftar Harga Komoditas Jelang Iduladha di Kota Tangerang, Mu → partition=0 offset=125
+2026-05-25 14:17:49 [INFO]   ✓ [umum           ] Pemerintah Perpanjang Penyaluran Bantuan Pangan Sampai Juni  → partition=0 offset=126
+2026-05-25 14:17:49 [INFO]   ✓ [umum           ] Harga BBM stabil jelang Idul Adha - Antara News jatim → partition=0 offset=127
+2026-05-25 14:17:50 [INFO]   ✓ [cabai          ] Harga Cabai Rawit Tembus Rp81.300 per Kg, Telur Rp33.100 - H → partition=0 offset=128
+2026-05-25 14:17:50 [INFO]   ✓ [umum           ] Tekan Inflasi Jelang Idul Adha, Pemkab Pidie Jaya Gelar Gera → partition=0 offset=129
+2026-05-25 14:17:51 [INFO]   ✓ [umum           ] Buka GPM di Desa Batu Langka Kecil, Wabup Misharti Tegaskan  → partition=0 offset=130
+2026-05-25 14:17:51 [INFO]   ✓ [cabai          ] Harga cabai rawit di Pasar Cipete capai Rp90 ribu jelang Idu → partition=0 offset=131
+2026-05-25 14:17:52 [INFO]   ✓ [umum           ] Gerakan Pangan Murah Pangkep Jaga Stabilitas Harga Pangan -  → partition=0 offset=132
+2026-05-25 14:17:52 [INFO]   ✓ [beras          ] Bulog cek gudang beras di Buleleng pastikan stok cukup jelan → partition=0 offset=133
+2026-05-25 14:17:53 [INFO]   ✓ [umum           ] Senator RI minta Bulog Belitung jaga stabilitas harga pangan → partition=0 offset=134
+2026-05-25 14:17:53 [INFO]   ✓ [umum           ] Rakor Pengendalian Harga Pangan Secara Virtual - Hai Kalteng → partition=0 offset=135
+2026-05-25 14:17:54 [INFO]   ✓ [umum           ] Pemkot Cilegon Gelar Gerakan Pangan Murah untuk Stabilkan Ha → partition=0 offset=136
+2026-05-25 14:17:54 [INFO]   ✓ [umum           ] Blackout Berpotensi Picu Volatilitas Harga Pangan - harianSI → partition=0 offset=137
+2026-05-25 14:17:55 [INFO]   ✓ [umum           ] Blackout Sumatra Belum Picu Kenaikan Harga Pangan Sumatra Ut → partition=0 offset=138
+2026-05-25 14:17:55 [INFO]   ✓ [umum           ] DKI Perketat Pengawasan Pasokan Pangan Jelang Iduladha - Sin → partition=0 offset=139
+2026-05-25 14:17:56 [INFO]   ✓ [umum           ] Bupati Blitar Evaluasi Realisasi APBD 2026, Fokus pada Progr → partition=0 offset=140
+2026-05-25 14:17:56 [INFO]   ✓ [umum           ] Pekan Terakhir Mei, Harga Kebutuhan Pokok di Cirebon Melonja → partition=0 offset=141
+2026-05-25 14:17:57 [INFO]   ✓ [cabai          ] Harga Cabai Rawit Merah Naik Tajam Tembus Rp73.500 per Kg, W → partition=0 offset=142
+2026-05-25 14:17:57 [INFO]   ✓ [umum           ] Harga Pangan 24 Mei 2026 Naik Menjelang Idul Adha - Pojok Pa → partition=0 offset=143
+2026-05-25 14:17:58 [INFO]   ✓ [cabai          ] Harga Pangan Hari Ini 24 Mei: Harga Daging Sapi & Cabai Naik → partition=0 offset=144
+2026-05-25 14:17:58 [INFO]   ✓ [umum           ] Satreskrim Polres Bangkep Cek Harga Pangan di Pasar Salakan, → partition=0 offset=145
+2026-05-25 14:17:59 [INFO]   ✓ [kedelai        ] Inflasi Tahunan Indonesia Mereda Jadi 242 Persen Pada April  → partition=0 offset=146
+2026-05-25 14:17:59 [INFO]   ✓ [umum           ] Bantuan Pangan Diperpanjang hingga Juni, Bapanas Genjot Dist → partition=0 offset=147
+2026-05-25 14:18:00 [INFO]   ✓ [umum           ] Pemprov DKI Pantau Ketat Harga Pangan Jelang Idul Adha 2026, → partition=0 offset=148
+2026-05-25 14:18:00 [INFO]   ✓ [umum           ] Rupiah Melemah, Dampaknya Bisa ke Harga Pangan hingga PHK -  → partition=0 offset=149
+2026-05-25 14:18:01 [INFO]   ✓ [umum           ] Disperindag Lebak Pastikan Stok Pangan Aman Jelang Idul Adha → partition=0 offset=150
+2026-05-25 14:18:01 [INFO]   ✓ [cabai          ] Awas Terulang! Cabai Merah-Cabai Rawit Biang Keladi Inflasi  → partition=0 offset=151
+2026-05-25 14:18:02 [INFO]   ✓ [beras          ] Bansos Beras-Minyak Goreng Diperpanjang hingga Juni! - detik → partition=0 offset=152
+2026-05-25 14:18:02 [INFO]   ✓ [umum           ] Warga Jakarta Diminta Tidak Panic Buying di Tengah Kenaikan  → partition=0 offset=153
+2026-05-25 14:18:03 [INFO]   ✓ [umum           ] Harga Pangan Naik, Pemprov DKI Jakarta Ingatkan Warga Tak 'P → partition=0 offset=154
+2026-05-25 14:18:03 [INFO]   ✓ [umum           ] Pemprov DKI Pantau Kenaikan Harga Pangan Jelang Idul Adha -  → partition=0 offset=155
+2026-05-25 14:18:04 [INFO]   ✓ [umum           ] Pemprov DKI Pantau Fluktuasi Harga Pangan Jelang Iduladha -  → partition=0 offset=156
+2026-05-25 14:18:04 [INFO]   ✓ [umum           ] Kenaikan Harga Pangan di Ibu Kota Jakarta Dipicu Meningkatny → partition=0 offset=157
+2026-05-25 14:18:05 [INFO]   ✓ [beras          ] Kenaikan Harga Plastik Global Ancam Katrol Harga Beras dan G → partition=0 offset=158
+2026-05-25 14:18:05 [INFO]   ✓ [umum           ] Harga Daging dan Pangan Lainnya di Bali 23 Mei 2026, Naik At → partition=0 offset=159
+2026-05-25 14:18:05 [INFO]   Fetching: https://news.google.com/rss/search?q=komoditas+pangan&hl=id&gl=ID&ceid=ID:id
+2026-05-25 14:18:07 [INFO]   ✓ [umum           ] Polsek Lempuing Jaya Dampingi Warga Kembangkan Tanaman Labu  → partition=0 offset=160
+2026-05-25 14:18:08 [INFO]   ✓ [kedelai        ] Pemkot Palembang Jamin Stok Sembako Aman hingga Akhir Tahun  → partition=0 offset=161
+2026-05-25 14:18:08 [INFO]   ✓ [umum           ] Barantin Musnahkan 62,9 Ton Pangan Tidak Layak Konsumsi - Ba → partition=0 offset=162
+2026-05-25 14:18:09 [INFO]   ✓ [umum           ] Dinas TPHP Prov Kalteng Dukung Gerakan Pangan Murah Melalui  → partition=0 offset=163
+2026-05-25 14:18:09 [INFO]   ✓ [umum           ] Dua Hari Jelang Iduladha 1447 H, Harga Sejumlah Komoditas di → partition=0 offset=164
+2026-05-25 14:18:10 [INFO]   ✓ [umum           ] Perkuat Ketahanan Pangan Nasional, Babinsa Koramil 1418-03/K → partition=0 offset=165
+2026-05-25 14:18:10 [INFO]   ✓ [cabai          ] Harga Cabai hingga Bawang di Jakarta Naik Jelang Iduladha, P → partition=0 offset=166
+2026-05-25 14:18:11 [INFO]   ✓ [cabai          ] Harga Cabai dan Bawang Merah Melonjak Tinggi Jelang Iduladha → partition=0 offset=167
+2026-05-25 14:18:12 [INFO]   ✓ [umum           ] Indonesia Capai 96 Persen Swasembada di Bawah Kepemimpinan P → partition=0 offset=168
+2026-05-25 14:18:12 [INFO]   ✓ [cabai          ] Jelang Iduladha 2026, Harga Cabai hingga Daging Melonjak di  → partition=0 offset=169
+2026-05-25 14:18:13 [INFO]   ✓ [umum           ] Pemkab Bangka Selatan Pantau Kondisi Stok Pangan, Bahan Poko → partition=0 offset=170
+2026-05-25 14:18:13 [INFO]   ✓ [umum           ] Mendes PDT Yandri Susanto, Dorong Optimalisasi Dana Desa unt → partition=0 offset=171
+2026-05-25 14:18:14 [INFO]   ✓ [cabai          ] Harga Cabai Melejit, Beban Belanja Warga Kian Berat - banjar → partition=0 offset=172
+2026-05-25 14:18:14 [INFO]   ✓ [umum           ] Jelang Idul Adha, KPPU Temukan Harga Enam Komoditas Pangan d → partition=0 offset=173
+2026-05-25 14:18:15 [INFO]   ✓ [umum           ] Refleksi di Hari Kehati: Kekayaan Pangan Lokal Terabaikan di → partition=0 offset=174
+2026-05-25 14:18:15 [INFO]   ✓ [umum           ] Warga Sumringah, Pasar Murah Diperluas, Setiap Kelurahan Keb → partition=0 offset=175
+2026-05-25 14:18:16 [INFO]   ✓ [umum           ] Jelang Idul Adha 2026, KPPU: 6 Komoditas Pangan Lampung Lamp → partition=0 offset=176
+2026-05-25 14:18:16 [INFO]   ✓ [umum           ] Siapkan Langkah Antisipasi Untuk Menangani Kenaikan Harga Be → partition=0 offset=177
+2026-05-25 14:18:17 [INFO]   ✓ [umum           ] Dinas Ketahanan Pangan Prov. Kalteng Adakan Pemantauan Terha → partition=0 offset=178
+2026-05-25 14:18:18 [INFO]   ✓ [umum           ] Harga Komoditas Pangan di Tangerang Selatan Melonjak Menjela → partition=0 offset=179
+2026-05-25 14:18:18 [INFO]   ✓ [umum           ] Pelindungan Maksimal, Barantin Amankan 42 Ton Produk Pangan  → partition=0 offset=180
+2026-05-25 14:18:19 [INFO]   ✓ [beras          ] Bantuan Pangan Beras dan Minyak Goreng di Perpanjang Sampai  → partition=0 offset=181
+2026-05-25 14:18:19 [INFO]   ✓ [umum           ] Pemko Tanjungpinang jual bahan pangan murah jelang Idul Adha → partition=0 offset=182
+2026-05-25 14:18:20 [INFO]   ✓ [umum           ] Stok Bahan Pangan Aman Jelang Iduladha, Masyarakat Sumsel Di → partition=0 offset=183
+2026-05-25 14:18:20 [INFO]   ✓ [umum           ] 11 Bahan Pangan RI Ini Dibeli Pakai Dolar, Jadi Favorit Warg → partition=0 offset=184
+2026-05-25 14:18:21 [INFO]   ✓ [umum           ] Pastikan Stabilitas Pangan Jelang Idul Adha, Ombudsman RI Si → partition=0 offset=185
+2026-05-25 14:18:21 [INFO]   ✓ [cabai          ] Harga Cabai Naik Signifikan, Rawit Merah Tembus Rp73.500/Kg  → partition=0 offset=186
+2026-05-25 14:18:22 [INFO]   ✓ [umum           ] Sambut HBKN: Bupati dan Wabup Dukung Penuh Gerakan Pangan Mu → partition=0 offset=187
+2026-05-25 14:18:22 [INFO]   ✓ [umum           ] 42 Ton Pangan Ilegal di Pontianak Mulai Membusuk dan Tumbuh  → partition=0 offset=188
+2026-05-25 14:18:23 [INFO]   ✓ [umum           ] Jamin Mutu Komoditas Pangan, Pemkot Tangerang Gencarkan Sosi → partition=0 offset=189
+2026-05-25 14:18:23 [INFO]   ✓ [umum           ] Inflasi Lampung Terkendali, Pemprov Lampung Intensifkan Peng → partition=0 offset=190
+2026-05-25 14:18:24 [INFO]   ✓ [umum           ] Ketenangan Pasar Pangan: Kesiapan Menjelang Pesta Kurban - t → partition=0 offset=191
+2026-05-25 14:18:24 [INFO]   ✓ [umum           ] Rakor Nasional Inflasi, Bener Meriah Catat Penurunan Harga K → partition=0 offset=192
+2026-05-25 14:18:25 [INFO]   ✓ [gula           ] Pemprov Dorong Pengembangan Komoditas Sagu Sebagai Pangan Lo → partition=0 offset=193
+2026-05-25 14:18:25 [INFO]   ✓ [umum           ] Ombudsman RI Temukan MinyaKita Langka dan Harga Pangan Lampa → partition=0 offset=194
+2026-05-25 14:18:26 [INFO]   ✓ [umum           ] Sederet Komoditas Pangan Indonesia yang Masih Dibeli Pakai D → partition=0 offset=195
+2026-05-25 14:18:26 [INFO]   ✓ [jagung         ] Pemkab Malinau Optimalkan Lahan Tidur Melalui Program Tanam  → partition=0 offset=196
+2026-05-25 14:18:27 [INFO]   ✓ [umum           ] Jelang Iduladha, Warga Sumsel Diimbau Tak Panic Buying, Stok → partition=0 offset=197
+2026-05-25 14:18:27 [INFO]   ✓ [umum           ] Wagub Sulsel Minta TPID Perkuat Stabilitas Harga dan Pasokan → partition=0 offset=198
+2026-05-25 14:18:28 [INFO]   ✓ [umum           ] Kota Palangka Raya Gandeng Kabupaten Karo Perkuat Distribusi → partition=0 offset=199
+2026-05-25 14:18:28 [INFO]   ✓ [umum           ] Harga Komoditas Pangan Mulai Naik - RMOL JATENG → partition=0 offset=200
+2026-05-25 14:18:29 [INFO]   ✓ [umum           ] Harga Komoditas Pangan Pokok Mayoritas Turun - TVRI News → partition=0 offset=201
+2026-05-25 14:18:29 [INFO]   ✓ [umum           ] Komitmen Jamin Keamanan Pangan, Karantina Papua Musnahkan 4, → partition=0 offset=202
+2026-05-25 14:18:30 [INFO]   ✓ [umum           ] Sumsel deflasi 0,04 persen pada April didorong komoditas pan → partition=0 offset=203
+2026-05-25 14:18:30 [INFO]   ✓ [umum           ] Harga Pangan Hari Ini 9 Mei, Mayoritas Komoditas Pangan Naik → partition=0 offset=204
+2026-05-25 14:18:31 [INFO]   ✓ [umum           ] Kementerian Pertanian Republik Indonesia - pertanian.go.id → partition=0 offset=205
+2026-05-25 14:18:31 [INFO]   ✓ [umum           ] Wagub Sulteng: Program Berani Makmur untuk majukan sektor ta → partition=0 offset=206
+2026-05-25 14:18:32 [INFO]   ✓ [umum           ] Ahli Pemohon: Dampak Impor Pangan Berimbas ke Petani Kecil - → partition=0 offset=207
+2026-05-25 14:18:32 [INFO]   ✓ [umum           ] Rakor Pengendalian Inflasi: Komoditas Pangan Jadi Sorotan, D → partition=0 offset=208
+2026-05-25 14:18:33 [INFO]   ✓ [cabai          ] Lima Komoditas Pangan di Cirebon Naik, Cabai Rawit Tembus Rp → partition=0 offset=209
+2026-05-25 14:18:33 [INFO]   ✓ [umum           ] Pemerintah Tingkatkan Koordinasi Ketahanan Pangan Nasional - → partition=0 offset=210
+2026-05-25 14:18:34 [INFO]   ✓ [umum           ] Diversifikasi Pangan di Bali Diperkuat,Komoditas Lokal Jadi  → partition=0 offset=211
+2026-05-25 14:18:34 [INFO]   ✓ [umum           ] Selama Ramadan, Barantin Siagakan 3.930 Personel dalam Penga → partition=0 offset=212
+2026-05-25 14:18:35 [INFO]   ✓ [umum           ] Zulhas Minta Kopdes Merah Putih Aktif Serap Komoditas Pangan → partition=0 offset=213
+2026-05-25 14:18:35 [INFO]   ✓ [umum           ] Harga Bahan Pangan Relatif Stabil, Daya Beli Terjaga, TPID P → partition=0 offset=214
+2026-05-25 14:18:36 [INFO]   ✓ [umum           ] Usai Zoom Meeting Bersama Kemendagri RI, Pemerintah Kabupate → partition=0 offset=215
+2026-05-25 14:18:36 [INFO]   ✓ [umum           ] Masih Dinamis, Ini Update Terbaru Harga Komoditas Pangan di  → partition=0 offset=216
+2026-05-25 14:18:36 [INFO] 
+Ringkasan polling #1:
+2026-05-25 14:18:36 [INFO]   Entry baru dikirim : 217
+2026-05-25 14:18:36 [INFO]   Duplikat diabaikan : 83
+2026-05-25 14:18:36 [INFO]   Total ID tersimpan : 217
+2026-05-25 14:18:36 [INFO]   Polling berikutnya dalam 3.1 menit...
+2026-05-25 14:21:47 [INFO] 
+═══════════════════════════════════════════════════════
+2026-05-25 14:21:47 [INFO] POLLING #2 — 2026-05-25 14:21:47
+2026-05-25 14:21:47 [INFO] ═══════════════════════════════════════════════════════
+2026-05-25 14:21:47 [INFO]   Fetching: https://news.google.com/rss/search?q=harga+bahan+pangan&hl=id&gl=ID&ceid=ID:id
+2026-05-25 14:21:48 [INFO]   ✓ [umum           ] Update Harga Bahan Pangan Pokok di Kota Tangerang Terpantau  → partition=0 offset=217
+2026-05-25 14:21:48 [INFO]   Fetching: https://news.google.com/rss/search?q=harga+pangan&hl=id&gl=ID&ceid=ID:id
+2026-05-25 14:21:50 [INFO]   ✓ [umum           ] Tim Gabungan Turun ke Pasar, Pastikan Stok dan Harga Pangan  → partition=0 offset=218
+2026-05-25 14:21:51 [INFO]   ✓ [umum           ] Harga Pangan Dipantau Ketat hinga H+7 Lebaran, Disperindag C → partition=0 offset=219
+2026-05-25 14:21:51 [INFO]   Fetching: https://news.google.com/rss/search?q=komoditas+pangan&hl=id&gl=ID&ceid=ID:id
+2026-05-25 14:21:52 [INFO]   ✓ [umum           ] Sidak Pasar Jelang Idul Adha, KPPU Temukan Enam Komoditas Pa → partition=0 offset=220
+2026-05-25 14:21:53 [INFO]   ✓ [umum           ] Kawal Pangan Sehat Untuk Generasi Indonesia, Karantina Pasti → partition=0 offset=221
+2026-05-25 14:21:53 [INFO]   ✓ [umum           ] 42 Ton Pangan Ilegal di Pontianak Mulai Membusuk dan Tumbuh  → partition=0 offset=222
+2026-05-25 14:21:54 [INFO]   ✓ [umum           ] Pengawasan Stabilisasi Harga dan Supply Chain Komoditas Pang → partition=0 offset=223
+2026-05-25 14:21:54 [INFO]   ✓ [umum           ] Inflasi Lebaran 2026 “Terkendali”, Rakor Tekankan Waspada Ko → partition=0 offset=224
+2026-05-25 14:21:55 [INFO]   ✓ [umum           ] Kementerian Pertanian Republik Indonesia - pertanian.go.id → partition=0 offset=225
+2026-05-25 14:21:55 [INFO]   ✓ [umum           ] Update Harga Pangan di Kota Tangerang Pertengahan Bulan Rama → partition=0 offset=226
+2026-05-25 14:21:56 [INFO]   ✓ [umum           ] Nilai Tukar Rupiah Melemah, Harga Pangan Berpotensi Naik - U → partition=0 offset=227
+2026-05-25 14:21:56 [INFO]   ✓ [umum           ] Stok Komoditas Pangan Strategis Kabupaten Semarang Aman Sela → partition=0 offset=228
+2026-05-25 14:21:57 [INFO]   ✓ [umum           ] HL Ajak Jajaran Pemda Perkuat Komoditas Pangan Lokal - Siwal → partition=0 offset=229
+2026-05-25 14:21:57 [INFO]   ✓ [umum           ] Gerakan Pangan Murah, Solusi Pemerintah Jaga Stabilitas Harg → partition=0 offset=230
+2026-05-25 14:21:58 [INFO]   ✓ [umum           ] Kementerian Pertanian Republik Indonesia - pertanian.go.id → partition=0 offset=231
+2026-05-25 14:21:58 [INFO]   ✓ [umum           ] Ini 11 Negara Pemasok Bahan Pangan Terbesar di Dunia, Ada In → partition=0 offset=232
+2026-05-25 14:21:58 [INFO] 
+Ringkasan polling #2:
+2026-05-25 14:21:58 [INFO]   Entry baru dikirim : 16
+2026-05-25 14:21:58 [INFO]   Duplikat diabaikan : 284
+2026-05-25 14:21:58 [INFO]   Total ID tersimpan : 233
+2026-05-25 14:21:58 [INFO]   Polling berikutnya dalam 4.8 menit...
+2026-05-25 14:26:55 [INFO] 
+═══════════════════════════════════════════════════════
+2026-05-25 14:26:55 [INFO] POLLING #3 — 2026-05-25 14:26:55
+2026-05-25 14:26:55 [INFO] ═══════════════════════════════════════════════════════
+2026-05-25 14:26:55 [INFO]   Fetching: https://news.google.com/rss/search?q=harga+bahan+pangan&hl=id&gl=ID&ceid=ID:id
+2026-05-25 14:26:56 [INFO]   ✓ [umum           ] Operasi Pasar Murah Pemprov Riau Pekan Ini Masih Terpusat di → partition=0 offset=233
+2026-05-25 14:26:56 [INFO]   Fetching: https://news.google.com/rss/search?q=harga+pangan&hl=id&gl=ID&ceid=ID:id
+2026-05-25 14:26:57 [INFO]   ✓ [umum           ] Warga diingatkan tak "panic buying" terkait kenaikan harga p → partition=0 offset=234
+2026-05-25 14:26:58 [INFO]   ✓ [umum           ] Pemprov DKI siaga pantau harga pangan jelang Idul Adha - Els → partition=0 offset=235
+2026-05-25 14:26:58 [INFO]   Fetching: https://news.google.com/rss/search?q=komoditas+pangan&hl=id&gl=ID&ceid=ID:id
+2026-05-25 14:27:00 [INFO]   ✓ [umum           ] Mendag Budi Santoso Pastikan Harga Pangan Stabil Menjelang I → partition=0 offset=236
+2026-05-25 14:27:00 [INFO]   ✓ [umum           ] Harga Pangan 24 Mei 2026 Naik Menjelang Idul Adha - Kabarnus → partition=0 offset=237
+2026-05-25 14:27:01 [INFO]   ✓ [umum           ] Potensi Bisnis Jewawut untuk UMKM: Serealia Lokal Bergizi ya → partition=0 offset=238
+2026-05-25 14:27:01 [INFO]   ✓ [kedelai        ] Prabowo Subianto Targetkan Swasembada Daging Pangan Empat Ta → partition=0 offset=239
+2026-05-25 14:27:02 [INFO]   ✓ [umum           ] Prabowo Klaim Swasembada Pangan Nasional Tercapai dalam Semb → partition=0 offset=240
+2026-05-25 14:27:02 [INFO]   ✓ [umum           ] Harga Pangan 24 Mei 2026 Melonjak Menjelang Idul Adha - Medi → partition=0 offset=241
+2026-05-25 14:27:03 [INFO]   ✓ [umum           ] Bahan Pengawet Makanan Kemasan Tingkatkan Risiko Hipertensi  → partition=0 offset=242
+2026-05-25 14:27:03 [INFO]   ✓ [umum           ] Inflasi Januari 2026 Terkendali, Mendagri Minta Daerah Tetap → partition=0 offset=243
+2026-05-25 14:27:04 [INFO]   ✓ [umum           ] Badan Pengawasan Keuangan dan Pembangunan - Badan Pengawasan → partition=0 offset=244
+2026-05-25 14:27:04 [INFO]   ✓ [umum           ] Jaga Stabilitas Harga Pangan, Pemkab Tuban Gelar GPM - Tuban → partition=0 offset=245
+2026-05-25 14:27:04 [INFO] 
+Ringkasan polling #3:
+2026-05-25 14:27:04 [INFO]   Entry baru dikirim : 13
+2026-05-25 14:27:04 [INFO]   Duplikat diabaikan : 287
+2026-05-25 14:27:04 [INFO]   Total ID tersimpan : 246
+2026-05-25 14:27:04 [INFO]   Polling berikutnya dalam 4.8 menit...
+2026-05-25 14:32:03 [INFO] 
+═══════════════════════════════════════════════════════
+2026-05-25 14:32:03 [INFO] POLLING #4 — 2026-05-25 14:32:03
+2026-05-25 14:32:03 [INFO] ═══════════════════════════════════════════════════════
+2026-05-25 14:32:03 [INFO]   Fetching: https://news.google.com/rss/search?q=harga+bahan+pangan&hl=id&gl=ID&ceid=ID:id
+2026-05-25 14:32:04 [INFO]   ✓ [umum           ] Pemkot Pasuruan Ikuti Rakor TPID untuk Antisipasi Kenaikan H → partition=0 offset=246
+2026-05-25 14:32:04 [INFO]   ✓ [umum           ] Jelang Iduladha, Harga Daging Sapi Naik, Minyak Kita Langka  → partition=0 offset=247
+2026-05-25 14:32:04 [INFO]   Fetching: https://news.google.com/rss/search?q=harga+pangan&hl=id&gl=ID&ceid=ID:id
+2026-05-25 14:32:06 [INFO]   ✓ [umum           ] Disperindag Cilegon Pastikan Stok Aman, Harga Pangan Tak Mel → partition=0 offset=248
+2026-05-25 14:32:06 [INFO]   ✓ [umum           ] Strategi Redam Harga Pangan Saat Dolar Perkasa, Digitalisasi → partition=0 offset=249
+2026-05-25 14:32:06 [INFO]   Fetching: https://news.google.com/rss/search?q=komoditas+pangan&hl=id&gl=ID&ceid=ID:id
+2026-05-25 14:32:07 [INFO] 
+Ringkasan polling #4:
+2026-05-25 14:32:07 [INFO]   Entry baru dikirim : 4
+2026-05-25 14:32:07 [INFO]   Duplikat diabaikan : 296
+2026-05-25 14:32:07 [INFO]   Total ID tersimpan : 250
+2026-05-25 14:32:07 [INFO]   Polling berikutnya dalam 4.9 menit...

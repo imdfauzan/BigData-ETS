@@ -18,6 +18,7 @@ import time
 import hashlib
 import logging
 import feedparser
+import os
 
 from datetime import datetime
 from kafka import KafkaProducer
@@ -27,18 +28,16 @@ from kafka.errors import KafkaError
 # KONFIGURASI
 # ─────────────────────────────────────────────
 
-KAFKA_BROKER   = "127.0.0.1:9092"
+KAFKA_BROKER   = os.getenv("KAFKA_BROKER", "localhost:9092")
 KAFKA_TOPIC    = "pangan-rss"
 POLL_INTERVAL  = 5 * 60   # 5 menit dalam detik
 
 # Daftar RSS feed berita komoditas pangan Indonesia
-# Gunakan beberapa sumber agar data lebih kaya
+# Prioritas: Google News (working) + Alternative sources
 RSS_FEEDS = [
-    "https://rss.bisnis.com/feed/rss2/ekonomi",
-    "https://www.kontan.co.id/rss/bisnis",            # bisnis/komoditas
-    "https://ekonomi.bisnis.com/feed/rss",            # ekonomi bisnis
-    "https://rss.detik.com/index.php/detikfinance",   # detikfinance
-    "https://katadata.co.id/feed",                    # katadata
+    "https://news.google.com/rss/search?q=harga+bahan+pangan&hl=id&gl=ID&ceid=ID:id",  # Primary - Working
+    "https://news.google.com/rss/search?q=harga+pangan&hl=id&gl=ID&ceid=ID:id",  # Secondary search
+    "https://news.google.com/rss/search?q=komoditas+pangan&hl=id&gl=ID&ceid=ID:id",  # Tertiary search
 ]
 
 # Kata kunci komoditas yang dipantau (untuk filter berita relevan)
@@ -139,11 +138,13 @@ def buat_producer() -> KafkaProducer:
                 value_serializer    = lambda v: json.dumps(v, ensure_ascii=False).encode("utf-8"),
                 key_serializer      = lambda k: k.encode("utf-8"),
                 acks                = "all",             # tunggu semua replica konfirmasi
-                enable_idempotence  = True,              # hindari duplikat di level Kafka
-                retries             = 3,
+                retries             = 5,                # ↑ tingkatkan retry
+                retry_backoff_ms    = 100,              # delay 100ms antar retry
                 linger_ms           = 500,
                 compression_type    = "gzip",
-                max_block_ms        = 10_000,
+                max_block_ms        = 30_000,           # ↑ tingkatkan timeout metadata fetch (30s)
+                request_timeout_ms  = 40_000,           # ↑ timeout untuk request (40s)
+                connections_max_idle_ms = 540_000,      # keep connection alive longer
             )
             log.info(f"[Kafka] Producer terhubung ke {KAFKA_BROKER}")
             return producer
@@ -196,10 +197,22 @@ def jalankan_producer():
             for feed_url in RSS_FEEDS:
                 log.info(f"  Fetching: {feed_url}")
                 try:
-                    feed = feedparser.parse(feed_url)
+                    # Add User-Agent to avoid 403 errors from some feed providers
+                    feed = feedparser.parse(
+                        feed_url,
+                        request_headers={
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        }
+                    )
 
                     if feed.bozo:
-                        log.warning(f"  [Warn] Feed tidak valid: {feed_url} — {feed.bozo_exception}")
+                        log.warning(f"  [Warn] Feed XML parsing warning: {feed_url}")
+                        log.debug(f"  Bozo exception: {feed.bozo_exception}")
+                    
+                    # Skip if no entries found
+                    if not feed.entries:
+                        log.info(f"  [Info] No entries in feed: {feed_url}")
+                        continue
 
                     for entry in feed.entries:
                         # Gunakan link sebagai ID unik; fallback ke title+published
@@ -217,17 +230,33 @@ def jalankan_producer():
                         msg = buat_message(entry, feed_url)
                         key = hashlib.md5(entry_id.encode()).hexdigest()
 
-                        try:
-                            future   = producer.send(KAFKA_TOPIC, key=key, value=msg)
-                            metadata = future.get(timeout=10)
-                            sent_ids.add(entry_id)
-                            total_baru += 1
-                            log.info(
-                                f"  ✓ [{msg['komoditas']:15s}] {msg['title'][:60]}"
-                                f" → partition={metadata.partition} offset={metadata.offset}"
-                            )
-                        except KafkaError as e:
-                            log.error(f"  ✗ Gagal kirim: {e} | entry: {entry_id[:40]}")
+                        # Retry logic untuk timeout errors
+                        kirim_berhasil = False
+                        for retry_attempt in range(1, 4):
+                            try:
+                                future   = producer.send(KAFKA_TOPIC, key=key, value=msg)
+                                metadata = future.get(timeout=15)  # ↑ timeout longer (15s)
+                                sent_ids.add(entry_id)
+                                total_baru += 1
+                                log.info(
+                                    f"  ✓ [{msg['komoditas']:15s}] {msg['title'][:60]}"
+                                    f" → partition={metadata.partition} offset={metadata.offset}"
+                                )
+                                kirim_berhasil = True
+                                break
+                            except KafkaError as e:
+                                if "metadata" in str(e).lower() and retry_attempt < 3:
+                                    log.warning(
+                                        f"  ⚠ Timeout metadata (percobaan {retry_attempt}/3), retry dalam 2s... | {str(e)[:60]}"
+                                    )
+                                    time.sleep(2)
+                                else:
+                                    log.error(f"  ✗ Gagal kirim: {e} | entry: {entry_id[:40]}")
+                                    break
+                        
+                        if not kirim_berhasil:
+                            # Jangan skip entry ini dari sent_ids, coba lagi di polling berikutnya
+                            pass
 
                 except Exception as e:
                     log.error(f"  [Error] Gagal fetch feed {feed_url}: {e}")

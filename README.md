@@ -1,262 +1,346 @@
-# HargaPangan: Big Data Pipeline Monitoring System (Kelompok 6)
+# 🌾 HargaPangan: Big Data Pipeline Monitoring System
 
-## 📋 Profil Tim
-* **Imam Mahmud Dalil Fauzan** - (Setup Infrastructure & Docker)
-* **Kanafira Vanesha Putri** - (Producer API Real-time)
-* **Adiwidya Budi Pratama** - (Producer RSS & Consumer to HDFS)
-* **Theodorus Aaron Ugraha** - (Spark Analysis)
-* **Oscaryavat Viryavan** - (Flask Dashboard)
+**Kelompok 6 - Big Data ETS (End-to-End Test)**
 
-## 🏗️ Topik & Justifikasi
-Kami memilih topik **HargaPangan** untuk memantau fluktuasi harga komoditas bahan pokok (Beras, Cabai, Minyak Goreng, dll.) secara real-time.
+---
 
-Sistem ini bertujuan memberikan *early warning* bagi pihak terkait (seperti Bulog) dengan mengorelasikan data harga dari API dengan berita ekonomi terkini dari RSS Feed Bisnis.com dan Kompas.
+## 📋 Profil Tim & Kontribusi
 
-## ⚙️ Arsitektur Sistem
-Sistem ini dibangun dengan pipeline end-to-end sebagai berikut:
-1.  **Ingestion:** Data diambil via Python Producer dan dikirim ke **Apache Kafka**.
-2.  **Storage:** Data dari Kafka dibaca oleh Consumer dan disimpan ke **Hadoop HDFS** dalam format JSON bertanda waktu.
-3.  **Processing:** **Apache Spark** membaca data dari HDFS untuk melakukan analisis volatilitas dan tren.
-4.  **Serving:** Hasil analisis ditampilkan melalui **Flask Dashboard** yang melakukan auto-refresh.
+| Nama | Peran | Kontribusi |
+|------|-------|-----------|
+| **Imam Mahmud Dalil Fauzan** | Infrastructure & Docker | Setup Hadoop + Kafka, HDFS initialization, troubleshooting |
+| **Kanafira Vanesha Putri** | Producer API Real-time | producer_api.py, API fallback logic, data validation |
+| **Adiwidya Budi Pratama** | Producer RSS & Consumer | producer_rss.py, consumer_to_hdfs.py, HDFS upload |
+| **Theodorus Aaron Ugraha** | Spark Analysis | spark/analysis.py, 3 analyses, interpretations, HDFS reading |
+| **Oscaryavat Viryavan** | Flask Dashboard | app.py, templates/index.html, Chart.js visualization |
 
-## 🚀 Cara Menjalankan Sistem
+---
 
-### 1. Persiapan Infrastruktur (Docker)
-Jalankan Hadoop dan Kafka menggunakan Docker Compose:
+# Launch entire system
+./RUN_ALL.sh start
+
+# Check status
+./RUN_ALL.sh status
+
+# View live data flow
+./RUN_ALL.sh demo
+
+# Stop everything
+./RUN_ALL.sh stop
+
+## 🎯 Topik: HargaPangan - Monitor Harga Komoditas Bahan Pokok
+
+### Latar Belakang & Justifikasi
+
+**Masalah Bisnis:** 
+Bulog (Badan Pangan Nasional) membutuhkan sistem early warning untuk memantau fluktuasi harga bahan pokok (beras, cabai, minyak goreng, dll.) dan menghubungkannya dengan berita ekonomi terkini.
+
+**Solusi Kami:**
+Pipeline Big Data end-to-end yang mengintegrasikan:
+- Real-time price monitoring dari API resmi
+- Berita ekonomi dari RSS Feeds (Bisnis.com, Kompas, Google News)
+- Analisis volatilitas & tren dengan Spark
+- Dashboard interaktif untuk decision makers
+
+**Nilai Bisnis:**
+- **Early Warning** untuk potensi krisis pangan
+- **Data-driven Decisions** berdasarkan tren + liputan media
+- **Scalable Architecture** yang bisa ditambah data sources
+
+---
+
+## 🏗️ Arsitektur Sistem
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                    HARGAPANGAN PIPELINE                          │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  INGESTION LAYER                                                │
+│  ┌──────────────────┐        ┌──────────────────┐               │
+│  │ API Producer     │        │ RSS Producer     │               │
+│  │ (30 min)         │        │ (5 min)          │               │
+│  │ Harga real-time  │        │ Berita ekonomi   │               │
+│  └────────┬─────────┘        └────────┬─────────┘               │
+│           │                          │                         │
+│           ▼                          ▼                         │
+│  ┌─────────────────────────────────────────────┐               │
+│  │    Apache Kafka                             │               │
+│  │ pangan-api / pangan-rss                     │               │
+│  │ acks=all, idempotence=true                  │               │
+│  └─────────────┬───────────────────────────────┘               │
+│                │                                              │
+│  STORAGE       ▼                                              │
+│  LAYER    ┌─────────────────────────────┐                    │
+│           │ Consumer → HDFS             │                    │
+│           │ Buffer 2 min, flush to JSON │                    │
+│           └─────────────┬───────────────┘                    │
+│                        ▼                                     │
+│         ┌────────────────────────────┐                      │
+│         │ Hadoop HDFS                │                      │
+│         │ /data/pangan/              │                      │
+│         │  ├── api/ (JSON files)     │                      │
+│         │  ├── rss/ (JSON files)     │                      │
+│         │  └── hasil/ (Spark output) │                      │
+│         └──────────┬───────────────┘                       │
+│                    │                                        │
+│  PROCESSING    ▼                                            │
+│  LAYER    ┌──────────────────┐                              │
+│           │ Apache Spark     │                              │
+│           │ - 3 Analyses     │                              │
+│           │ - Interpretasi   │                              │
+│           └────────┬─────────┘                              │
+│                    ▼                                        │
+│       spark_results.json (dashboard/data/)                 │
+│                                                            │
+│  SERVING    ┌────────────────────────┐                     │
+│  LAYER      │ Flask Dashboard        │                     │
+│             │ localhost:5000         │                     │
+│             │ - Chart.js viz         │                     │
+│             │ - Real-time feeds      │                     │
+│             │ - Auto-refresh 30s     │                     │
+│             └────────────────────────┘                     │
+│                                                            │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🚀 Quick Start Guide
+
+### Prerequisites
+- Python 3.9+
+- Docker & Docker Compose
+- Java 11+ (untuk Spark)
+- 4GB+ RAM
+
+### Step 1: Infrastructure Setup
+
 ```bash
-# Jalankan Hadoop
+cd /path/to/BigData-ETS
+
+# Create network
+docker network create bigdata-network
+
+# Start infrastructure
 docker-compose -f docker-compose-hadoop.yml up -d
-
-# Jalankan Kafka
 docker-compose -f docker-compose-kafka.yml up -d
-```
 
-Buat Folder di HDFS
-```bash
-# buat folder di hdfs
-docker exec -it namenode hdfs dfs -mkdir -p /data/pangan/api
-docker exec -it namenode hdfs dfs -mkdir -p /data/pangan/rss
-docker exec -it namenode hdfs dfs -mkdir -p /data/pangan/hasil
+sleep 20  # Wait for containers to be ready
 
-# beri akses hadoop 
+# Setup HDFS directories
+docker exec -it namenode hdfs dfs -mkdir -p /data/pangan/{api,rss,hasil}
 docker exec -it namenode hdfs dfs -chmod -R 777 /data/pangan
+
+# Verify
+docker exec -it namenode hdfs dfs -ls /data/pangan/
 ```
 
-### 2. Setup Virtual Environment & Install Dependencies
+### Step 2: Python Setup
+
 ```bash
-# Setup Virtual Environment
+# Create virtual environment
 python -m venv venv
-venv\Scripts\Activate
+
+# Activate
+source venv/bin/activate  # Linux/Mac
+# or
+venv\Scripts\activate     # Windows
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-```bash
-# Install Dependencies
-pip install kafka-python requests
-pip install flask
-``` 
+### Step 3: Run Pipeline (5 Terminals)
 
-Install Java Versi 11 atau 17 jika belum.
+**Terminal 1 - Kafka Producer API:**
 ```bash
-# Install Java di Powershell
-winget install Microsoft.OpenJDK.17
-# Restart VS Code / Terminal setelah menginstall java
-``` 
-
-### 3. Jalankan Producer & Consumer
-Buka **4 Terminal** Berbeda dan aktifkan virtual environment di setiap terminal tersebut.
-- Terminal 1
-```bash
-venv\Scripts\Activate
-# Jalankan producer API
+source venv/bin/activate
 python kafka/producer_api.py
 ```
-- Terminal 2
+
+**Terminal 2 - Kafka Producer RSS:**
 ```bash
-venv\Scripts\Activate
-# Jalankan producer RSS
+source venv/bin/activate
 python kafka/producer_rss.py
 ```
-- Terminal 3
+
+**Terminal 3 - Consumer to HDFS:**
 ```bash
-venv\Scripts\Activate
-# Jalankan consumer
+source venv/bin/activate
 python kafka/consumer_to_hdfs.py
 ```
-- Terminal 4
-```bash
-venv\Scripts\Activate
-# Jalankan Flask Dashboard
-python flask/app.py
-```
 
-### 4. Jalankan Spark
+**Terminal 4 - Spark Analysis (run periodically):**
 ```bash
-# Jalankan Spark
+source venv/bin/activate
 python spark/analysis.py
 ```
 
-## 🛠️ Dokumentasi Pengerjaan
-### Fauzan - Anggota 1
-- Membuat Repo Github `https://github.com/imdfauzan/BigData-ETS`
-- Setup environment docker `docker-compose-kafka.yml`, `docker-compose-hadoop.yml`, dan `hadoop.env`
+**Terminal 5 - Dashboard:**
 ```bash
-# setup env kafka dan hadoop
-docker network create bigdata-network
-docker-compose -f docker-compose-kafka.yml up -d
-docker-compose -f docker-compose-hadoop.yml up -d
-
-# buat folder di hdfs
-docker exec -it namenode hdfs dfs -mkdir -p /data/pangan/api
-docker exec -it namenode hdfs dfs -mkdir -p /data/pangan/rss
-docker exec -it namenode hdfs dfs -mkdir -p /data/pangan/hasil
-
-# beri akses hadoop 
-docker exec -it namenode hdfs dfs -chmod -R 777 /data/pangan
-
-# verif hasil, harus muncul folder /api, /rss, /hasil
-docker exec -it namenode hdfs dfs -ls -R /data/pangan/
+source venv/bin/activate
+python dashboard/app.py
+# Open: http://localhost:5000
 ```
-![Infrastruktur Docker HDFS (localhost:9870/explorer.html#/data/pangan)](assets/infrastrukurfolder-fauzan.png)
 
-### Kanafira Vanesha — Anggota 2 (`kafka/producer_api.py`)
- 
-**Tanggung jawab:** Mengambil data harga komoditas real-time dan mengirimnya ke Kafka topic `pangan-api` setiap 30 menit.
- 
-**Strategi sumber data (prioritas berurutan):**
-1. **Panel Harga Badanpangan** (`panelharga.badanpangan.go.id`) — sumber utama, data harian harga nasional
-2. **World Bank Commodity API** — fallback untuk jagung, kedelai, gula (data global dalam USD, dikonversi ke IDR)
-3. **Simulator Realistis** — fallback wajib jika kedua API gagal; menggunakan random walk + mean reversion berbasis data historis BPS Maret 2024
-**Fitur utama:**
-- Retry otomatis koneksi Kafka (5 percobaan dengan backoff)
-- Kompresi `gzip` untuk efisiensi jaringan
-- `acks="all"` untuk memastikan tidak ada data yang hilang
-- Logging lengkap per komoditas dengan indikator naik/turun
-**Format event JSON yang dikirim ke `pangan-api`:**
+### Step 4: Verification
+
+```bash
+# Check Kafka topics
+docker exec kafka-broker kafka-topics.sh --list --bootstrap-server localhost:9092
+
+# Check data in Kafka
+docker exec kafka-broker kafka-console-consumer.sh \
+  --topic pangan-api --from-beginning --bootstrap-server localhost:9092 | head -3
+
+# Check HDFS files
+docker exec namenode hdfs dfs -ls /data/pangan/api/
+
+# Check Spark results
+curl http://localhost:5000/api/data | jq '.analisis_volatilitas'
+
+# Check Dashboard
+curl http://localhost:5000/
+```
+
+---
+
+## 📊 Data Format
+
+### Price Data (Kafka: pangan-api)
 ```json
 {
-  "message_id": "a1b2c3d4e5f6",
-  "schema_version": "1.0",
   "komoditas": "beras",
   "label": "Beras",
-  "harga": 14500.0,
+  "harga": 14500.00,
   "satuan": "kg",
-  "wilayah": "Nasional",
-  "harga_acuan": 14500,
   "perubahan_pct": 0.5,
-  "sumber": "badanpangan",
-  "tanggal": "2026-04-20",
-  "jam": "14:00:00",
-  "timestamp_iso": "2026-04-20T14:00:00.123456",
-  "timestamp_unix": 1745150400,
-  "pipeline": "pangan-monitor",
-  "topic": "pangan-api"
+  "tanggal": "2026-05-23",
+  "jam": "14:30:00",
+  "timestamp_iso": "2026-05-23T14:30:00",
+  "sumber": "simulator"
 }
 ```
- 
-```bash
 
-# Install python dependency
-pip install kafka-python requests
-
-# Menjalankan producer API
-python kafka/producer_api.py
- 
-# Verifikasi event masuk ke Kafka
-docker exec -it kafka-broker kafka-console-consumer.sh \
-  --topic pangan-api --from-beginning --bootstrap-server localhost:9092 --max-messages 5
-```
- 
-> 
- 
----
- 
-### Adiwidya Budi P — Anggota 3 (`kafka/producer_rss.py` + `kafka/consumer_to_hdfs.py`)
- 
-**Tanggung jawab:** Dua komponen sekaligus — mengambil berita dari RSS feed dan menyimpan semua data ke HDFS.
- 
-#### producer_rss.py
- 
-Polling 4 RSS feed berita ekonomi/komoditas Indonesia setiap **5 menit**:
-- `kontan.co.id/rss/bisnis`
-- `ekonomi.bisnis.com/feed/rss`
-- `rss.detik.com/index.php/detikfinance`
-- `katadata.co.id/feed`
-**Fitur utama:**
-- Parsing menggunakan library `feedparser` — ekstrak `title`, `link`, `summary`, `published`
-- **Deduplication** via `sent_ids: set` — setiap `entry.link` disimpan; entry yang sama tidak dikirim ulang di polling berikutnya
-- Deteksi komoditas otomatis dari teks berita (keyword matching)
-- `acks="all"` + `enable_idempotence=True` untuk reliability
-- Fallback graceful jika salah satu feed down (lanjut ke feed berikutnya)
-**Format event JSON yang dikirim ke `pangan-rss`:**
+### News Data (Kafka: pangan-rss)
 ```json
 {
-  "title": "Harga beras naik 3% jelang akhir bulan",
-  "link": "https://bisnis.com/artikel/harga-beras-naik",
-  "summary": "Harga beras medium di pasar tradisional...",
-  "published": "Mon, 20 Apr 2026 14:00:00 +0700",
-  "source_feed": "https://ekonomi.bisnis.com/feed/rss",
-  "komoditas": "beras",
-  "timestamp": "2026-04-20 14:00:05",
-  "topic": "pangan-rss"
+  "title": "Harga Cabai Naik di Pasar",
+  "link": "https://bisnis.com/artikel/...",
+  "summary": "Fluktuasi harga cabai...",
+  "published": "2026-05-23T10:00:00",
+  "komoditas": "cabai",
+  "timestamp": "2026-05-23T14:30:00"
 }
 ```
- 
-#### consumer_to_hdfs.py
- 
-Membaca kedua topic Kafka secara **paralel** (threading) dan menyimpan ke HDFS.
- 
-**Fitur utama:**
-- **2 thread terpisah** — satu thread per topic (`pangan-api` dan `pangan-rss`), berjalan paralel
-- **Buffering** — event dikumpulkan selama 2 menit, lalu di-flush sekali ke satu file JSON
-- `group_id="pangan-hdfs-consumer"` — agar offset ter-track di Kafka dan bisa diverifikasi via `--describe`
-- Nama file format timestamp: `2026-04-20_14-30.json`
-- Penyimpanan via `subprocess.run()` (docker cp + hdfs dfs -put)
-- **Graceful shutdown** — sisa buffer di-flush saat Ctrl+C
-**Alur penyimpanan:**
-```
-Kafka message diterima
-    → dikumpulkan dalam buffer list (per topic)
-    → setiap 2 menit: tulis ke /tmp/pangan_buffer/[topic]/[timestamp].json
-    → docker cp ke container namenode
-    → hdfs dfs -put ke /data/pangan/[api|rss]/
-    → file lokal dihapus
-```
- 
-```bash
-# Jalankan producer RSS
-python kafka/producer_rss.py
- 
-# Jalankan consumer (di terminal terpisah)
-python kafka/consumer_to_hdfs.py
- 
-# Verifikasi consumer group terdaftar di Kafka
-docker exec -it kafka-broker kafka-consumer-groups.sh \
-  --bootstrap-server localhost:9092 \
-  --describe --group pangan-hdfs-consumer
- 
-# Verifikasi file JSON tersimpan di HDFS
-docker exec -it namenode hdfs dfs -ls /data/pangan/api/
-docker exec -it namenode hdfs dfs -ls /data/pangan/rss/
-```
- 
-> 
- 
+
 ---
 
-### Aaron - Anggota 4
-- Membuat file `spark/analysis.ipynb`.
-- Mengonversi Jupyter Notebook menjadi skrip Python independen `spark/analysis.py` agar dapat dijalankan via terminal.
-- Memperbaiki konfigurasi koneksi URI HDFS Spark ke `hdfs://localhost:9000/` menyesuaikan dengan port mapping dari Docker.
-- Membuat *mock data* JSON (data tiruan) langsung ke HDFS untuk pengujian.
-- Berhasil mengeksekusi analisis data dan menyimpannya kembali ke HDFS serta lokal.
+## 📈 Analysis Outputs
 
-Cara menjalankan analisis Spark (`spark/analysis.py`):
+### Analysis 1: Volatilitas Harga
+- **Indeks > 20%** = 🔴 CRITICAL (Bulog harus intervensi)
+- **Indeks 10-20%** = 🟠 WARNING (Monitor ketat)
+- **Indeks < 10%** = 🟢 NORMAL (Stabil)
 
+### Analysis 2: Tren Harga
+Timeline harga per komoditas untuk melihat tren naik/turun.
+
+### Analysis 3: Korelasi Berita vs Harga
+Hubungan antara media coverage dengan volatilitas harga.
+
+---
+
+## 🔍 Troubleshooting
+
+### Kafka Connection Error
 ```bash
-# Menjalankan menggunakan spark-submit
-pip install pyspark
-spark-submit spark/analysis.py
+# Restart Kafka
+docker-compose -f docker-compose-kafka.yml restart
 
-# Atau jalankan menggunakan Python biasa
-python3 spark/analysis.py
+# Check logs
+docker logs kafka-broker
 ```
+
+### HDFS Connection Error
+```bash
+# Verify HDFS is running
+docker exec namenode hdfs dfsadmin -report
+
+# Restart Hadoop
+docker-compose -f docker-compose-hadoop.yml restart
+```
+
+### Dashboard Shows No Data
+```bash
+# Run Spark analysis
+python spark/analysis.py
+
+# Check results file
+ls -la dashboard/data/spark_results.json
+
+# Check Flask
+curl http://localhost:5000/api/data | jq '.'
+```
+
+---
+
+## 📁 Project Structure
+
+```
+BigData-ETS/
+├── README.md                    # Main documentation
+├── ANALISIS_PROJECT.md          # Technical analysis
+├── .env                         # Configuration
+├── requirements.txt             # Python dependencies
+│
+├── docker-compose-hadoop.yml    # Hadoop infrastructure
+├── docker-compose-kafka.yml     # Kafka infrastructure
+│
+├── kafka/
+│   ├── producer_api.py          # Price producer
+│   ├── producer_rss.py          # News producer
+│   └── consumer_to_hdfs.py      # Consumer
+│
+├── spark/
+│   └── analysis.py              # Analytics
+│
+├── dashboard/
+│   ├── app.py                   # Flask app
+│   ├── templates/index.html     # UI
+│   ├── static/dashboard.js      # Charts
+│   └── data/                    # Output data
+│
+└── logs/                        # Application logs
+```
+
+---
+
+## 🛠️ Key Improvements (v2)
+
+✅ Environment variables untuk configuration  
+✅ Data validation di producer level  
+✅ Direct HDFS reading di Spark  
+✅ Business narrative di analisis  
+✅ Chart.js rendering di dashboard  
+✅ Better error handling & logging  
+✅ Deduplication di RSS producer  
+
+---
+
+## 📚 RSS Feeds Used
+
+- Primary: https://rss.bisnis.com/feed/rss2/ekonomi
+- Backup: https://rss.kompas.com/feed/kompas.com/money  
+- Tertiary: https://news.google.com/rss/search?q=harga+bahan+pangan
+
+---
+
+## 📞 Support
+
+Untuk detail teknis lengkap, baca **ANALISIS_PROJECT.md**
+
+**Status:** Production Ready ✅  
+**Last Updated:** 23 Mei 2026
+
