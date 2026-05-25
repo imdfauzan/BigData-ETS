@@ -35,14 +35,46 @@ def index():
 
 @app.route("/api/data")
 def api_data():
-    """Endpoint API untuk mengirim data Spark (historis/analisis) ke frontend."""
-    data = load_json_file(SPARK_RESULTS_PATH, handle_nan=True)
-    if data is None:
-        return jsonify({"error": "Data tidak ditemukan atau gagal dibaca"}), 500
+    """
+    Endpoint API untuk mengirim data lengkap ke frontend.
+    Menggabungkan Spark results, live harga, dan berita terbaru.
+    """
+    # Load data dari berbagai sumber
+    spark_data = load_json_file(SPARK_RESULTS_PATH, handle_nan=True) or {}
+    live_api_raw = load_json_file(LIVE_API_PATH) or []
+    live_rss_raw = load_json_file(LIVE_RSS_PATH) or []
 
-    # Tambahkan timestamp server untuk tracking
-    data["server_timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    return jsonify(data)
+    # Handle both dict and list formats for live data
+    if isinstance(live_api_raw, dict):
+        live_harga = live_api_raw.get("data", [])
+    else:
+        live_harga = live_api_raw if isinstance(live_api_raw, list) else []
+    
+    if isinstance(live_rss_raw, dict):
+        berita = live_rss_raw.get("data", [])
+    else:
+        berita = live_rss_raw if isinstance(live_rss_raw, list) else []
+
+    # Siapkan response yang sesuai dengan struktur dashboard
+    response = {
+        "server_timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        
+        # Live data
+        "live_harga": live_harga[:20] if isinstance(live_harga, list) else [],
+        "berita": berita[:20] if isinstance(berita, list) else [],
+        
+        # Spark analysis results
+        "spark": spark_data.get("analyses", {}) if isinstance(spark_data, dict) else {},
+        
+        # Status pipeline
+        "status": {
+            "spark_ok": bool(spark_data),
+            "live_ok": len(live_harga) > 0,
+            "news_ok": len(berita) > 0,
+        }
+    }
+
+    return jsonify(response)
 
 
 @app.route("/api/live")
@@ -74,4 +106,3 @@ if __name__ == "__main__":
     print(" Akses aplikasi di: http://localhost:5000")
     print("=" * 50)
     app.run(host="0.0.0.0", port=5000, debug=True)
-

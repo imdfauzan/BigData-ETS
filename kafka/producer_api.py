@@ -22,6 +22,8 @@ import random
 import hashlib
 import logging
 import requests
+import os
+import math
 
 from datetime import datetime, timedelta
 from kafka import KafkaProducer
@@ -31,7 +33,7 @@ from kafka.errors import KafkaError
 # KONFIGURASI
 # ─────────────────────────────────────────────
 
-KAFKA_BROKER = "127.0.0.1:9092"
+KAFKA_BROKER = os.getenv("KAFKA_BROKER", "localhost:9092")
 KAFKA_TOPIC    = "pangan-api"
 POLL_INTERVAL  = 30 * 60          # 30 menit dalam detik
 REQUEST_TIMEOUT = 10               # timeout request HTTP (detik)
@@ -411,6 +413,45 @@ def buat_message(record: dict) -> dict:
     }
 
 
+# ─────────────────────────────────────────────
+# DATA VALIDATION
+# ─────────────────────────────────────────────
+
+def validasi_record_harga(record: dict) -> tuple[bool, str]:
+    """
+    Validasi struktur dan nilai record harga.
+    Return: (valid: bool, pesan_error: str)
+    """
+    import math
+    
+    # Cek field wajib (timestamp_iso akan ditambahkan oleh buat_message)
+    required_fields = ["komoditas", "harga", "satuan"]
+    missing = [f for f in required_fields if f not in record]
+    if missing:
+        return False, f"Missing required fields: {missing}"
+    
+    # Validasi tipe data
+    if not isinstance(record["harga"], (int, float)):
+        return False, f"harga harus numeric, got {type(record['harga'])}"
+    
+    # Validasi range harga (realistis untuk komoditas pangan)
+    harga = float(record["harga"])
+    if harga <= 0:
+        return False, f"harga harus positif, got {harga}"
+    if harga > 1_000_000:
+        return False, f"harga unrealistis (terlalu tinggi): {harga}"
+    
+    # Validasi NaN/Inf
+    if math.isnan(harga) or math.isinf(harga):
+        return False, f"harga contains NaN/Inf: {harga}"
+    
+    # Validasi komoditas dikenal
+    if record["komoditas"] not in KOMODITAS:
+        return False, f"komoditas tidak dikenal: {record['komoditas']}"
+    
+    return True, "OK"
+
+
 def buat_producer() -> KafkaProducer:
     """Inisialisasi Kafka producer dengan retry dan serialisasi JSON."""
     for attempt in range(1, 6):
@@ -437,17 +478,34 @@ def kirim_ke_kafka(producer: KafkaProducer, records: list[dict]) -> int:
     """
     Kirim semua record harga ke Kafka.
     Key = nama komoditas (sesuai spesifikasi: key: nama komoditas).
-    Return jumlah pesan berhasil dikirim.
+    Dengan validasi data sebelum kirim.
     """
+    now   = datetime.now()
+    msg   = []
     sukses = 0
+    dropped = 0
+
+    # Filter record yang valid
     for record in records:
-        msg = buat_message(record)
+        valid, error_msg = validasi_record_harga(record)
+        if not valid:
+            log.warning(f"  ✗ Record dropped: {error_msg} | {record.get('komoditas', 'unknown')}")
+            dropped += 1
+            continue
+        msg.append(record)
+
+    if dropped > 0:
+        log.info(f"Validasi: {dropped} record dropped (invalid data)")
+
+    # Kirim yang valid
+    for record in msg:
+        msg_lengkap = buat_message(record)
         key = record["komoditas"]
 
         future = producer.send(
             KAFKA_TOPIC,
             key   = key,
-            value = msg,
+            value = msg_lengkap,
         )
         try:
             metadata = future.get(timeout=10)

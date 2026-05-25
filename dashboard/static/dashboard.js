@@ -1,97 +1,129 @@
+// ═════════════════════════════════════════════════════════════════
+// HargaPangan Dashboard - JavaScript Logic
+// Chart rendering, data fetching, auto-refresh
+// ═════════════════════════════════════════════════════════════════
+
 let volatilitasChartInstance = null;
 let trenChartInstance = null;
 
-function formatRupiah(angka) {
-    if (angka === null || angka === undefined || isNaN(angka)) return '-';
-    return 'Rp ' + angka.toLocaleString('id-ID');
+// ─────────────────────────────────────────────
+// UTILITY FUNCTIONS
+// ─────────────────────────────────────────────
+
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+    }
 }
 
-function formatNumber(angka) {
-    if (angka === null || angka === undefined || isNaN(angka)) return '-';
-    return angka.toLocaleString('id-ID', { maximumFractionDigits: 2 });
+function formatCurrency(value) {
+    if (!value) return 'Rp 0';
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(value).replace('Rp', 'Rp ');
 }
 
-function getStatusBadgeClass(status) {
-    if (!status) return 'badge-stabil';
-    if (status.includes('WASPADA')) return 'badge-waspada';
-    if (status.includes('RENDAH')) return 'badge-rendah';
-    return 'badge-stabil';
-}
-
-async function fetchData() {
+function formatDate(dateString) {
+    if (!dateString) return '-';
     try {
-        const response = await fetch('/api/data');
-        if (!response.ok) throw new Error('Gagal mengambil data');
-        return await response.json();
+        return new Date(dateString).toLocaleString('id-ID');
+    } catch {
+        return dateString;
+    }
+}
+
+function getVolatilityBadge(volatilitas) {
+    if (volatilitas > 20) return { class: 'badge-waspada', text: 'CRITICAL' };
+    if (volatilitas > 10) return { class: 'badge-waspada', text: 'WARNING' };
+    return { class: 'badge-stabil', text: 'NORMAL' };
+}
+
+// ─────────────────────────────────────────────
+// FETCH DATA
+// ─────────────────────────────────────────────
+
+async function fetchAnalysisData() {
+    try {
+        const response = await fetch('/api/data', { cache: 'no-cache' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        return data;
     } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching analysis data:', error);
+        showErrorMessage('Gagal memuat data analisis dari Spark');
         return null;
     }
 }
 
 async function fetchLiveData() {
     try {
-        const response = await fetch('/api/live');
-        if (!response.ok) throw new Error('Gagal mengambil data live');
-        return await response.json();
+        const response = await fetch('/api/live', { cache: 'no-cache' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error fetching live data:', error);
         return null;
     }
 }
 
-function updateSummary(data) {
-    const meta = data.metadata || {};
-    document.getElementById('totalApi').textContent = meta.total_data_api || 0;
-    document.getElementById('totalRss').textContent = meta.total_data_rss || 0;
+// ─────────────────────────────────────────────
+// RENDER CHARTS
+// ─────────────────────────────────────────────
 
-    const volatilitas = data.analisis_1_volatilitas || [];
-    document.getElementById('totalKomoditas').textContent = volatilitas.length;
+function renderVolatilitasChart(volatilitasData) {
+    const ctx = document.getElementById('volatilitasChart');
+    if (!ctx) return;
 
-    const timestamp = data.server_timestamp || new Date().toLocaleString('id-ID');
-    document.getElementById('lastUpdated').textContent = 'Update: ' + timestamp;
-}
-
-function renderVolatilitasChart(data) {
-    const ctx = document.getElementById('volatilitasChart').getContext('2d');
-    const volatilitas = data.analisis_1_volatilitas || [];
+    const labels = volatilitasData.map(d => d.label || d.komoditas);
+    const values = volatilitasData.map(d => parseFloat(d.indeks_volatilitas) || 0);
+    
+    // Color based on volatility level
+    const colors = values.map(v => {
+        if (v > 20) return 'rgb(239, 68, 68)';     // Red - Critical
+        if (v > 10) return 'rgb(245, 158, 11)';    // Orange - Warning
+        return 'rgb(16, 185, 129)';                // Green - Normal
+    });
 
     if (volatilitasChartInstance) {
         volatilitasChartInstance.destroy();
     }
-
-    const labels = volatilitas.map(v => v.label || v.komoditas);
-    const values = volatilitas.map(v => v.indeks_volatilitas || 0);
 
     volatilitasChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Indeks Volatilitas',
+                label: 'Indeks Volatilitas (%)',
                 data: values,
-                backgroundColor: values.map(v => v > 10 ? 'rgba(245, 158, 11, 0.8)' : 'rgba(16, 185, 129, 0.8)'),
-                borderColor: values.map(v => v > 10 ? 'rgba(245, 158, 11, 1)' : 'rgba(16, 185, 129, 1)'),
-                borderWidth: 2,
-                borderRadius: 8,
-                borderSkipped: false,
+                backgroundColor: colors,
+                borderColor: colors,
+                borderWidth: 1,
+                borderRadius: 6
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
+                legend: {
+                    display: true,
+                    labels: {
+                        color: '#f1f5f9',
+                        font: { size: 12 }
+                    }
+                },
                 tooltip: {
-                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                    titleColor: '#34d399',
-                    bodyColor: '#f1f5f9',
-                    borderColor: 'rgba(16, 185, 129, 0.3)',
-                    borderWidth: 1,
-                    padding: 12,
+                    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                    titleColor: '#f1f5f9',
+                    bodyColor: '#cbd5e1',
                     callbacks: {
                         label: function(context) {
-                            return 'Indeks: ' + formatNumber(context.parsed.y);
+                            return `Volatilitas: ${context.parsed.y.toFixed(2)}%`;
                         }
                     }
                 }
@@ -99,34 +131,35 @@ function renderVolatilitasChart(data) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: { color: 'rgba(148, 163, 184, 0.1)' },
-                    ticks: { color: '#94a3b8' }
+                    ticks: {
+                        color: '#94a3b8',
+                        callback: function(value) {
+                            return value.toFixed(0) + '%';
+                        }
+                    },
+                    grid: { color: 'rgba(148, 163, 184, 0.1)' }
                 },
                 x: {
-                    grid: { display: false },
-                    ticks: { color: '#94a3b8' }
+                    ticks: { color: '#94a3b8' },
+                    grid: { display: false }
                 }
-            },
-            animation: {
-                duration: 1000,
-                easing: 'easeOutQuart'
             }
         }
     });
 }
 
-function renderTrenChart(data) {
-    const ctx = document.getElementById('trenChart').getContext('2d');
-    const tren = data.analisis_2_tren_harga || [];
+function renderTrenChart(trenData) {
+    const ctx = document.getElementById('trenChart');
+    if (!ctx) return;
+
+    const labels = trenData.map(d => d.label || d.komoditas);
+    const avgPrices = trenData.map(d => parseFloat(d.harga_rata2) || 0);
+    const minPrices = trenData.map(d => parseFloat(d.harga_min_sepanjang_waktu) || 0);
+    const maxPrices = trenData.map(d => parseFloat(d.harga_max_sepanjang_waktu) || 0);
 
     if (trenChartInstance) {
         trenChartInstance.destroy();
     }
-
-    const labels = tren.map(t => t.label || t.komoditas);
-    const minValues = tren.map(t => t.harga_terendah_sepanjang || 0);
-    const avgValues = tren.map(t => t.harga_rata2_keseluruhan || 0);
-    const maxValues = tren.map(t => t.harga_tertinggi_sepanjang || 0);
 
     trenChartInstance = new Chart(ctx, {
         type: 'line',
@@ -134,242 +167,302 @@ function renderTrenChart(data) {
             labels: labels,
             datasets: [
                 {
-                    label: 'Harga Terendah',
-                    data: minValues,
-                    borderColor: 'rgba(59, 130, 246, 0.8)',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4,
-                    fill: false,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: 'rgba(59, 130, 246, 1)',
-                },
-                {
-                    label: 'Rata-rata',
-                    data: avgValues,
-                    borderColor: 'rgba(16, 185, 129, 0.8)',
+                    label: 'Harga Rata-rata',
+                    data: avgPrices,
+                    borderColor: 'rgb(16, 185, 129)',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    tension: 0.4,
                     fill: true,
+                    tension: 0.4,
+                    borderWidth: 2,
                     pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                    pointBackgroundColor: 'rgb(16, 185, 129)',
+                    pointBorderColor: 'rgba(16, 185, 129, 0.3)',
+                    pointBorderWidth: 2
                 },
                 {
-                    label: 'Harga Tertinggi',
-                    data: maxValues,
-                    borderColor: 'rgba(245, 158, 11, 0.8)',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                    tension: 0.4,
+                    label: 'Harga Min',
+                    data: minPrices,
+                    borderColor: 'rgba(59, 130, 246, 0.5)',
+                    borderDash: [5, 5],
                     fill: false,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: 'rgba(245, 158, 11, 1)',
+                    tension: 0.4,
+                    borderWidth: 1,
+                    pointRadius: 0
+                },
+                {
+                    label: 'Harga Max',
+                    data: maxPrices,
+                    borderColor: 'rgba(239, 68, 68, 0.5)',
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.4,
+                    borderWidth: 1,
+                    pointRadius: 0
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: {
-                    position: 'top',
-                    labels: { color: '#94a3b8', padding: 20 }
+                    display: true,
+                    labels: {
+                        color: '#f1f5f9',
+                        font: { size: 12 }
+                    }
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                    titleColor: '#34d399',
-                    bodyColor: '#f1f5f9',
-                    borderColor: 'rgba(16, 185, 129, 0.3)',
-                    borderWidth: 1,
-                    padding: 12,
+                    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                    titleColor: '#f1f5f9',
+                    bodyColor: '#cbd5e1',
                     callbacks: {
                         label: function(context) {
-                            return context.dataset.label + ': ' + formatRupiah(context.parsed.y);
+                            return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
                         }
                     }
                 }
             },
             scales: {
                 y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(148, 163, 184, 0.1)' },
                     ticks: {
                         color: '#94a3b8',
                         callback: function(value) {
-                            return 'Rp ' + (value / 1000) + 'K';
+                            return formatCurrency(value);
                         }
-                    }
+                    },
+                    grid: { color: 'rgba(148, 163, 184, 0.1)' }
                 },
                 x: {
-                    grid: { display: false },
-                    ticks: { color: '#94a3b8' }
+                    ticks: { color: '#94a3b8' },
+                    grid: { display: false }
                 }
-            },
-            animation: {
-                duration: 1000,
-                easing: 'easeOutQuart'
             }
         }
     });
 }
 
-function renderVolatilitasTable(data) {
+// ─────────────────────────────────────────────
+// RENDER TABLES
+// ─────────────────────────────────────────────
+
+function renderVolatilitasTable(volatilitasData) {
     const tbody = document.getElementById('volatilitasTable');
-    const volatilitas = data.analisis_1_volatilitas || [];
+    if (!tbody) return;
 
-    if (volatilitas.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">Tidak ada data volatilitas</td></tr>';
+    if (!volatilitasData || volatilitasData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Tidak ada data</td></tr>';
         return;
     }
 
-    tbody.innerHTML = volatilitas.map(v => `
-        <tr>
-            <td><strong>${v.komoditas || '-'}</strong></td>
-            <td>${v.label || '-'}</td>
-            <td>${formatRupiah(v.harga_max)}</td>
-            <td>${formatRupiah(v.harga_min)}</td>
-            <td>${formatRupiah(v.harga_avg)}</td>
-            <td>${formatNumber(v.harga_stddev)}</td>
-            <td>
-                <span class="badge ${v.indeks_volatilitas > 10 ? 'badge-waspada' : 'badge-stabil'}">
-                    ${formatNumber(v.indeks_volatilitas)}
-                </span>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = volatilitasData.map((item, idx) => {
+        const vol = parseFloat(item.indeks_volatilitas) || 0;
+        const badge = getVolatilityBadge(vol);
+        
+        return `
+            <tr>
+                <td>${item.komoditas || '-'}</td>
+                <td>${item.label || '-'}</td>
+                <td>${formatCurrency(parseFloat(item.harga_max) || 0)}</td>
+                <td>${formatCurrency(parseFloat(item.harga_min) || 0)}</td>
+                <td>${formatCurrency(parseFloat(item.harga_avg) || 0)}</td>
+                <td>${(parseFloat(item.harga_stddev) || 0).toFixed(2)}</td>
+                <td><span class="badge ${badge.class}">${badge.text} (${vol.toFixed(2)}%)</span></td>
+            </tr>
+        `;
+    }).join('');
 
-    document.getElementById('volatilitasUpdate').textContent = 'Diperbarui: ' + new Date().toLocaleTimeString('id-ID');
+    document.getElementById('volatilitasUpdate').textContent = 'Diperbarui: ' + formatDate(new Date());
 }
 
-function renderKorelasiTable(data) {
+function renderKorelasiTable(korelasiData) {
     const tbody = document.getElementById('korelasiTable');
-    const korelasi = data.analisis_3_korelasi_berita || [];
+    if (!tbody) return;
 
-    if (korelasi.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">Tidak ada data korelasi</td></tr>';
+    if (!korelasiData || korelasiData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Tidak ada data</td></tr>';
         return;
     }
 
-    tbody.innerHTML = korelasi.map(k => `
-        <tr>
-            <td><strong>${k.komoditas || '-'}</strong></td>
-            <td>${k.label || '-'}</td>
-            <td>${formatNumber(k.indeks_volatilitas)}</td>
-            <td>${formatRupiah(k.harga_avg)}</td>
-            <td>${k.jumlah_sebutan || 0}</td>
-            <td>
-                <span class="badge ${getStatusBadgeClass(k.status_korelasi)}">
-                    ${k.status_korelasi || '-'}
-                </span>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = korelasiData.map((item, idx) => {
+        const vol = parseFloat(item.indeks_volatilitas) || 0;
+        const mentions = parseInt(item.jumlah_sebutan) || 0;
+        const status = item.status_korelasi || 'RENDAH';
+        
+        let statusBadgeClass = 'badge-rendah';
+        if (status.includes('TINGGI')) statusBadgeClass = 'badge-waspada';
+        else if (status.includes('MODERAT')) statusBadgeClass = 'badge-waspada';
+        
+        return `
+            <tr>
+                <td>${item.komoditas || '-'}</td>
+                <td>${item.label || '-'}</td>
+                <td>${vol.toFixed(2)}%</td>
+                <td>${formatCurrency(parseFloat(item.harga_avg) || 0)}</td>
+                <td>${mentions}</td>
+                <td><span class="badge ${statusBadgeClass}">${status.split(':')[0]}</span></td>
+            </tr>
+        `;
+    }).join('');
 
-    document.getElementById('korelasiUpdate').textContent = 'Diperbarui: ' + new Date().toLocaleTimeString('id-ID');
+    document.getElementById('korelasiUpdate').textContent = 'Diperbarui: ' + formatDate(new Date());
 }
 
-function renderLiveApi(data) {
-    const container = document.getElementById('liveApiFeed');
-    const apiData = data.live_api || {};
-    const items = apiData.data || [];
+// ─────────────────────────────────────────────
+// RENDER LIVE FEEDS
+// ─────────────────────────────────────────────
 
-    if (items.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Belum ada data live API</p>';
+function renderLiveApiFeed(liveData) {
+    const container = document.getElementById('liveApiFeed');
+    if (!container) return;
+
+    if (!liveData || !liveData.data || liveData.data.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Tidak ada data live</p>';
         return;
     }
 
-    container.innerHTML = items.slice().reverse().map(item => {
-        const pct = item.perubahan_pct;
-        const indikator = pct > 0 ? '↑' : pct < 0 ? '↓' : '→';
-        const priceClass = pct > 0 ? 'price-up' : pct < 0 ? 'price-down' : 'price-neutral';
-        const pctStr = pct !== undefined ? `(${indikator}${Math.abs(pct).toFixed(1)}%)` : '';
-
+    const items = liveData.data.slice(-10); // Last 10 items
+    container.innerHTML = items.reverse().map(item => {
+        const change = parseFloat(item.perubahan_pct) || 0;
+        const changeClass = change > 0 ? 'price-up' : change < 0 ? 'price-down' : 'price-neutral';
+        const changeSymbol = change > 0 ? '↑' : change < 0 ? '↓' : '→';
+        
         return `
             <div class="feed-item">
-                <div class="feed-time">${item.jam || item.timestamp_iso || ''}</div>
+                <div class="feed-time">${item.timestamp || 'unknown'}</div>
                 <div class="feed-title">${item.label || item.komoditas || 'Unknown'}</div>
                 <div class="feed-meta">
-                    <span class="${priceClass}">${formatRupiah(item.harga)} / ${item.satuan || 'kg'}</span>
-                    <span style="margin-left: 0.5rem; color: var(--text-secondary);">${pctStr}</span>
-                    <span style="margin-left: 0.5rem; font-size: 0.75rem; color: var(--text-secondary);">[${item.sumber || 'unknown'}]</span>
+                    Harga: <strong>${formatCurrency(parseFloat(item.harga) || 0)}</strong>
+                    <span class="${changeClass}"> ${changeSymbol} ${Math.abs(change).toFixed(2)}%</span>
                 </div>
             </div>
         `;
     }).join('');
 
-    document.getElementById('liveApiUpdate').textContent = 'Diperbarui: ' + new Date().toLocaleTimeString('id-ID');
+    document.getElementById('liveApiUpdate').textContent = 'Diperbarui: ' + formatDate(new Date());
 }
 
-function renderLiveRss(data) {
+function renderLiveRssFeed(liveData) {
     const container = document.getElementById('liveRssFeed');
-    const rssData = data.live_rss || {};
-    const items = rssData.data || [];
+    if (!container) return;
 
-    if (items.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Belum ada berita RSS</p>';
+    if (!liveData || !liveData.data || liveData.data.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Tidak ada berita</p>';
         return;
     }
 
-    container.innerHTML = items.slice().reverse().map(item => {
+    const items = liveData.data.slice(-5); // Last 5 items
+    container.innerHTML = items.reverse().map(item => {
         return `
             <div class="feed-item">
-                <div class="feed-time">${item.timestamp || ''}</div>
-                <div class="feed-title">${item.title || 'Berita'}</div>
+                <div class="feed-time">${item.published || item.timestamp || 'unknown'}</div>
+                <div class="feed-title">
+                    <a href="${item.link || '#'}" target="_blank" style="color: var(--accent-green-light); text-decoration: none;">
+                        ${item.title || 'No title'}
+                    </a>
+                </div>
                 <div class="feed-meta">
-                    Komoditas: <strong>${item.komoditas || '-'}</strong>
+                    Komoditas: <strong>${item.komoditas || 'umum'}</strong>
                 </div>
             </div>
         `;
     }).join('');
 
-    document.getElementById('liveRssUpdate').textContent = 'Diperbarui: ' + new Date().toLocaleTimeString('id-ID');
+    document.getElementById('liveRssUpdate').textContent = 'Diperbarui: ' + formatDate(new Date());
 }
 
-async function init() {
-    const loadingOverlay = document.getElementById('loadingOverlay');
+// ─────────────────────────────────────────────
+// UPDATE SUMMARY CARDS
+// ─────────────────────────────────────────────
 
-    // Load spark data
-    const data = await fetchData();
-    if (data) {
-        updateSummary(data);
-        renderVolatilitasChart(data);
-        renderTrenChart(data);
-        renderVolatilitasTable(data);
-        renderKorelasiTable(data);
-    }
+function updateSummaryCards(analysisData, liveData) {
+    // Total data
+    const totalApi = analysisData?.metadata?.total_data_api || 0;
+    const totalRss = analysisData?.metadata?.total_data_rss || 0;
+    const totalKomoditas = analysisData?.analisis_volatilitas?.length || 0;
 
-    // Load live data
-    const liveData = await fetchLiveData();
-    if (liveData) {
-        renderLiveApi(liveData);
-        renderLiveRss(liveData);
-    }
+    document.getElementById('totalApi').textContent = totalApi;
+    document.getElementById('totalRss').textContent = totalRss;
+    document.getElementById('totalKomoditas').textContent = totalKomoditas;
+}
 
-    // Hide loading
-    if (loadingOverlay) {
-        loadingOverlay.classList.add('hidden');
+// ─────────────────────────────────────────────
+// ERROR HANDLING
+// ─────────────────────────────────────────────
+
+function showErrorMessage(message) {
+    const container = document.querySelector('.container');
+    if (container) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        `;
+        errorDiv.textContent = '⚠️ ' + message;
+        container.insertBefore(errorDiv, container.firstChild);
     }
 }
 
-// Auto-refresh setiap 30 detik
-setInterval(async () => {
-    const data = await fetchData();
-    if (data) {
-        updateSummary(data);
-        renderVolatilitasChart(data);
-        renderTrenChart(data);
-        renderVolatilitasTable(data);
-        renderKorelasiTable(data);
-    }
+// ─────────────────────────────────────────────
+// MAIN UPDATE FUNCTION
+// ─────────────────────────────────────────────
 
+async function updateDashboard() {
+    console.log('Fetching data...');
+    
+    const analysisData = await fetchAnalysisData();
     const liveData = await fetchLiveData();
-    if (liveData) {
-        renderLiveApi(liveData);
-        renderLiveRss(liveData);
+
+    if (analysisData) {
+        // Update charts
+        if (analysisData.analisis_volatilitas) {
+            renderVolatilitasChart(analysisData.analisis_volatilitas);
+            renderVolatilitasTable(analysisData.analisis_volatilitas);
+        }
+
+        if (analysisData.analisis_tren_harga) {
+            renderTrenChart(analysisData.analisis_tren_harga);
+        }
+
+        if (analysisData.analisis_berita) {
+            renderKorelasiTable(analysisData.analisis_berita);
+        }
+
+        // Update summary
+        updateSummaryCards(analysisData, liveData);
     }
-}, 30000);
 
-// Init on load
-document.addEventListener('DOMContentLoaded', init);
+    if (liveData) {
+        if (liveData.live_api) {
+            renderLiveApiFeed(liveData.live_api);
+        }
+        if (liveData.live_rss) {
+            renderLiveRssFeed(liveData.live_rss);
+        }
+    }
 
+    hideLoadingOverlay();
+    document.getElementById('lastUpdated').textContent = formatDate(new Date());
+}
+
+// ─────────────────────────────────────────────
+// INITIALIZATION & AUTO-REFRESH
+// ─────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard initialized');
+    
+    // Initial load
+    updateDashboard();
+
+    // Auto-refresh every 30 seconds
+    setInterval(updateDashboard, 30000);
+    
+    console.log('Auto-refresh enabled (30s interval)');
+});

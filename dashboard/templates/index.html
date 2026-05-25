@@ -1,603 +1,1153 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HargaPangan Dashboard - Kelompok 6</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --border-color: rgba(148, 163, 184, 0.1);
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --accent-green: #10b981;
-            --accent-green-light: #34d399;
-            --accent-green-dark: #059669;
-            --accent-emerald: #6ee7b7;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --info: #3b82f6;
-            --success: #22c55e;
-            --glass-bg: rgba(30, 41, 59, 0.6);
-            --glass-border: rgba(255, 255, 255, 0.08);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HargaPangan Monitor — Kelompok 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg-0: #060A0E;
+    --bg-1: #0C1219;
+    --bg-2: #111922;
+    --bg-3: #18232E;
+    --bg-4: #1F2E3A;
+    --amber: #F5A623;
+    --amber-dim: #C47D0E;
+    --amber-glow: rgba(245,166,35,0.12);
+    --red: #E63946;
+    --red-dim: #B52D38;
+    --green: #2DC653;
+    --green-dim: #1E9438;
+    --blue: #3B82F6;
+    --text-1: #EDF2F7;
+    --text-2: #8FA3B8;
+    --text-3: #4A6275;
+    --border: rgba(255,255,255,0.06);
+    --border-bright: rgba(255,255,255,0.12);
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+  }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #064e3b 50%, #0f172a 100%);
-            background-attachment: fixed;
-            color: var(--text-primary);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
+  html { font-size: 14px; }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-            position: relative;
-            z-index: 1;
-        }
+  body {
+    background: var(--bg-0);
+    color: var(--text-1);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-        .header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
+  /* ── GRID LINES BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(245,166,35,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,166,35,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
 
-        .header-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: var(--accent-green-light);
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 1rem;
-        }
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
+  }
 
-        .header h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-green-light) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.5rem;
-        }
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
 
-        .header p {
-            color: var(--text-secondary);
-            font-size: 1.125rem;
-            max-width: 600px;
-            margin: 0 auto;
-        }
+  .header-left { display: flex; align-items: center; gap: 16px; }
 
-        .header-meta {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-top: 1.5rem;
-            flex-wrap: wrap;
-        }
+  .logo-mark {
+    width: 40px; height: 40px;
+    background: var(--amber);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
 
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-        }
+  .logo-mark span {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--bg-0);
+    line-height: 1;
+  }
 
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
+  .header-title h1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--text-1);
+    line-height: 1;
+  }
 
-        .summary-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-        }
+  .header-title p {
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
 
-        .summary-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(16, 185, 129, 0.3);
-        }
+  .header-right { display: flex; align-items: center; gap: 20px; }
 
-        .card-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--accent-green-light);
-        }
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 14px;
+  }
 
-        .card-label {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.25rem;
-        }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse-dot 2s infinite;
+  }
 
-        .card-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
 
-        .card-desc {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
+  .status-bar span {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-2);
+  }
 
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.375rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
+  .clock {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--amber);
+    letter-spacing: 1px;
+  }
 
-        .status-active {
-            background: rgba(34, 197, 94, 0.15);
-            color: var(--success);
-        }
+  /* ── TICKER BANNER ── */
+  .ticker-wrap {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
 
-        .section {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 1rem;
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
+  .ticker-label {
+    background: var(--amber);
+    color: var(--bg-0);
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 0 14px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
 
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
+  .ticker-scroll {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
 
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
+  .ticker-inner {
+    display: flex;
+    gap: 0;
+    animation: ticker-move 30s linear infinite;
+    white-space: nowrap;
+  }
 
-        .section-title::before {
-            content: '';
-            width: 4px;
-            height: 24px;
-            background: linear-gradient(180deg, var(--accent-green), var(--accent-emerald));
-            border-radius: 2px;
-        }
+  @keyframes ticker-move {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
 
-        .last-update {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
+  .ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-2);
+    border-right: 1px solid var(--border);
+  }
 
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
+  .ticker-item .name { color: var(--text-1); font-weight: 600; }
+  .ticker-item .price { color: var(--amber); }
+  .ticker-item .up { color: var(--green); }
+  .ticker-item .down { color: var(--red); }
+  .ticker-item .flat { color: var(--text-3); }
 
-        .chart-container {
-            position: relative;
-            height: 300px;
-        }
+  /* ── METRIC CARDS ROW ── */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
 
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: 0.75rem;
-            border: 1px solid var(--border-color);
-        }
+  .metric-card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9375rem;
-        }
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent, var(--amber));
+  }
 
-        thead {
-            background: rgba(16, 185, 129, 0.1);
-        }
+  .metric-card:hover { border-color: var(--border-bright); }
 
-        th {
-            padding: 1rem 1.25rem;
-            text-align: left;
-            font-weight: 600;
-            color: var(--accent-green-light);
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid var(--border-color);
-        }
+  .metric-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 8px;
+  }
 
-        td {
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
+  .metric-value {
+    font-family: var(--font-mono);
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--text-1);
+    line-height: 1;
+  }
 
-        tbody tr:hover {
-            background: rgba(16, 185, 129, 0.05);
-        }
+  .metric-sub {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 6px;
+  }
 
-        tbody tr:last-child td {
-            border-bottom: none;
-        }
+  .metric-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 36px;
+    opacity: 0.08;
+    font-family: var(--font-display);
+    letter-spacing: 1px;
+  }
 
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.375rem 0.875rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
+  /* ── MAIN GRID ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
 
-        .badge-waspada {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--warning);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-        }
+  .panel {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
 
-        .badge-rendah {
-            background: rgba(59, 130, 246, 0.15);
-            color: var(--info);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
 
-        .badge-stabil {
-            background: rgba(34, 197, 94, 0.15);
-            color: var(--success);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-        }
+  .panel-title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: var(--text-1);
+  }
 
-        .feed-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
+  .panel-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
 
-        .feed-item {
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid var(--border-color);
-        }
+  .badge-amber { background: var(--amber-glow); color: var(--amber); border: 1px solid rgba(245,166,35,0.2); }
+  .badge-green { background: rgba(45,198,83,0.1); color: var(--green); border: 1px solid rgba(45,198,83,0.2); }
+  .badge-red   { background: rgba(230,57,70,0.1); color: var(--red); border: 1px solid rgba(230,57,70,0.2); }
+  .badge-blue  { background: rgba(59,130,246,0.1); color: var(--blue); border: 1px solid rgba(59,130,246,0.2); }
 
-        .feed-item:last-child {
-            border-bottom: none;
-        }
+  .panel-body { padding: 18px; }
 
-        .feed-time {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-bottom: 0.25rem;
-        }
+  /* ── VOLATILITY CHART ── */
+  .chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 280px;
+  }
 
-        .feed-title {
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-        }
+  /* ── PRICE TABLE ── */
+  .price-table { width: 100%; border-collapse: collapse; }
 
-        .feed-meta {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
+  .price-table th {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
 
-        .price-up {
-            color: var(--danger);
-        }
+  .price-table th:last-child { text-align: right; }
 
-        .price-down {
-            color: var(--success);
-        }
+  .price-table td {
+    padding: 10px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    vertical-align: middle;
+  }
 
-        .price-neutral {
-            color: var(--text-secondary);
-        }
+  .price-table tr:last-child td { border-bottom: none; }
 
-        .footer {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            border-top: 1px solid var(--border-color);
-            margin-top: 2rem;
-        }
+  .price-table tr {
+    transition: background 0.15s;
+  }
 
-        .footer strong {
-            color: var(--accent-green-light);
-        }
+  .price-table tr:hover td { background: rgba(255,255,255,0.02); }
 
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--bg-primary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            transition: opacity 0.5s, visibility 0.5s;
-        }
+  .kom-name {
+    font-weight: 600;
+    color: var(--text-1);
+    font-size: 13px;
+  }
 
-        .loading-overlay.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
+  .kom-sub {
+    font-size: 10px;
+    color: var(--text-3);
+    margin-top: 1px;
+  }
 
-        .spinner {
-            width: 48px;
-            height: 48px;
-            border: 3px solid rgba(16, 185, 129, 0.2);
-            border-top-color: var(--accent-green);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
-        }
+  .price-val {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--amber);
+    text-align: right;
+  }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
+  .change-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
 
-        @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-            }
+  .change-up   { background: rgba(45,198,83,0.12); color: var(--green); }
+  .change-down { background: rgba(230,57,70,0.12);  color: var(--red); }
+  .change-flat { background: rgba(255,255,255,0.05); color: var(--text-3); }
 
-            .header h1 {
-                font-size: 2rem;
-            }
+  /* ── BOTTOM GRID ── */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
 
-            .charts-grid,
-            .feed-grid {
-                grid-template-columns: 1fr;
-            }
+  /* ── TREND CHART ── */
+  .trend-wrap {
+    position: relative;
+    width: 100%;
+    height: 220px;
+  }
 
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  /* ── NEWS FEED ── */
+  .news-list { display: flex; flex-direction: column; gap: 0; }
+
+  .news-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  .news-item:last-child { border-bottom: none; }
+
+  .news-tag {
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--amber-glow);
+    color: var(--amber);
+    border: 1px solid rgba(245,166,35,0.15);
+    height: fit-content;
+    white-space: nowrap;
+  }
+
+  .news-content {}
+
+  .news-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-1);
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+
+  .news-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .news-title a:hover { color: var(--amber); }
+
+  .news-meta {
+    font-size: 10px;
+    color: var(--text-3);
+    font-family: var(--font-mono);
+  }
+
+  /* ── CORRELATION PANEL ── */
+  .corr-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .corr-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .corr-name {
+    width: 90px;
+    font-size: 12px;
+    color: var(--text-2);
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .corr-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .corr-bar {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--amber);
+    transition: width 0.8s ease;
+  }
+
+  .corr-val {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--amber);
+    width: 40px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ── STATUS FOOTER ── */
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer-left {
+    display: flex;
+    gap: 20px;
+  }
+
+  .footer-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .footer-stat-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  .footer-stat span {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  .footer-right {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  /* ── REFRESH INDICATOR ── */
+  .refresh-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--amber);
+    transition: width 0.5s linear;
+    z-index: 100;
+  }
+
+  /* ── LOADING SKELETON ── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg-2) 25%, var(--bg-3) 50%, var(--bg-2) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-anim 1.5s infinite;
+    border-radius: 4px;
+    height: 16px;
+  }
+
+  @keyframes skeleton-anim {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1100px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .bottom-grid { grid-template-columns: 1fr; }
+    .metrics-row { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 600px) {
+    .metrics-row { grid-template-columns: 1fr 1fr; }
+    .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  }
+</style>
 </head>
-
 <body>
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <p>Memuat data pipeline...</p>
+
+<div class="refresh-bar" id="refreshBar"></div>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo-mark"><span>HP</span></div>
+      <div class="header-title">
+        <h1>HARGA PANGAN MONITOR</h1>
+        <p>Big Data Pipeline Dashboard &nbsp;·&nbsp; Kelompok 6</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-bar">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="pipelineStatus">Menghubungkan...</span>
+      </div>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker-label">LIVE &nbsp;▶</div>
+    <div class="ticker-scroll">
+      <div class="ticker-inner" id="tickerInner">
+        <span class="ticker-item"><span class="name">BERAS</span><span class="price">Rp 14,500</span><span class="flat">→ 0.0%</span></span>
+        <span class="ticker-item"><span class="name">CABAI</span><span class="price">Rp 45,000</span><span class="up">↑ 3.2%</span></span>
+        <span class="ticker-item"><span class="name">TELUR</span><span class="price">Rp 29,000</span><span class="down">↓ 1.1%</span></span>
+        <span class="ticker-item"><span class="name">GULA</span><span class="price">Rp 17,000</span><span class="flat">→ 0.0%</span></span>
+        <span class="ticker-item"><span class="name">MINYAK</span><span class="price">Rp 17,500</span><span class="up">↑ 0.8%</span></span>
+        <span class="ticker-item"><span class="name">BAWANG</span><span class="price">Rp 38,000</span><span class="down">↓ 2.5%</span></span>
+        <span class="ticker-item"><span class="name">JAGUNG</span><span class="price">Rp 5,800</span><span class="up">↑ 1.4%</span></span>
+        <span class="ticker-item"><span class="name">KEDELAI</span><span class="price">Rp 12,000</span><span class="flat">→ 0.5%</span></span>
+        <!-- Duplikat untuk scroll seamless -->
+        <span class="ticker-item"><span class="name">BERAS</span><span class="price">Rp 14,500</span><span class="flat">→ 0.0%</span></span>
+        <span class="ticker-item"><span class="name">CABAI</span><span class="price">Rp 45,000</span><span class="up">↑ 3.2%</span></span>
+        <span class="ticker-item"><span class="name">TELUR</span><span class="price">Rp 29,000</span><span class="down">↓ 1.1%</span></span>
+        <span class="ticker-item"><span class="name">GULA</span><span class="price">Rp 17,000</span><span class="flat">→ 0.0%</span></span>
+        <span class="ticker-item"><span class="name">MINYAK</span><span class="price">Rp 17,500</span><span class="up">↑ 0.8%</span></span>
+        <span class="ticker-item"><span class="name">BAWANG</span><span class="price">Rp 38,000</span><span class="down">↓ 2.5%</span></span>
+        <span class="ticker-item"><span class="name">JAGUNG</span><span class="price">Rp 5,800</span><span class="up">↑ 1.4%</span></span>
+        <span class="ticker-item"><span class="name">KEDELAI</span><span class="price">Rp 12,000</span><span class="flat">→ 0.5%</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- METRIC CARDS -->
+  <div class="metrics-row">
+    <div class="metric-card" style="--accent: var(--amber);">
+      <div class="metric-label">Total Komoditas Dipantau</div>
+      <div class="metric-value" id="metricKom">8</div>
+      <div class="metric-sub">Beras, Jagung, Kedelai, dan lainnya</div>
+      <div class="metric-icon">KOM</div>
+    </div>
+    <div class="metric-card" style="--accent: var(--red);">
+      <div class="metric-label">Komoditas Bergejolak</div>
+      <div class="metric-value" id="metricVolatile" style="color: var(--red);">0</div>
+      <div class="metric-sub">Volatilitas &gt; 10%</div>
+      <div class="metric-icon">VOL</div>
+    </div>
+    <div class="metric-card" style="--accent: var(--green);">
+      <div class="metric-label">Total Data API (Spark)</div>
+      <div class="metric-value" id="metricData" style="color: var(--green);">0</div>
+      <div class="metric-sub">Record tersimpan di HDFS</div>
+      <div class="metric-icon">REC</div>
+    </div>
+    <div class="metric-card" style="--accent: var(--blue);">
+      <div class="metric-label">Artikel Berita RSS</div>
+      <div class="metric-value" id="metricNews" style="color: var(--blue);">0</div>
+      <div class="metric-sub">Dari feed ekonomi terbaru</div>
+      <div class="metric-icon">RSS</div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- LEFT: CHART VOLATILITAS -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">ANALISIS 1 — INDEKS VOLATILITAS</span>
+        <span class="panel-badge badge-amber">SPARK RESULT</span>
+      </div>
+      <div class="panel-body">
+        <div class="chart-wrap">
+          <canvas id="volChart" role="img" aria-label="Bar chart indeks volatilitas harga per komoditas">
+            Memuat data volatilitas dari Spark...
+          </canvas>
+        </div>
+      </div>
     </div>
 
-    <div class="container">
-        <header class="header">
-            <div class="header-badge">Sistem Monitoring Aktif</div>
-            <h1>HargaPangan Dashboard</h1>
-            <p>Monitoring fluktuasi harga komoditas pangan secara real-time dengan analisis Big Data</p>
-            <div class="header-meta">
-                <div class="meta-item">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                        </path>
-                    </svg>
-                    <span>Kelompok 6 - Big Data ETS</span>
-                </div>
-                <div class="meta-item">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
-                        </path>
-                    </svg>
-                    <span>Pipeline: Kafka &rarr; HDFS &rarr; Spark</span>
-                </div>
-                <div class="meta-item">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <span id="lastUpdated">Memuat...</span>
-                </div>
-            </div>
-        </header>
+    <!-- RIGHT: PRICE TABLE -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">HARGA LIVE</span>
+        <span class="panel-badge badge-green" id="liveBadge">● LIVE</span>
+      </div>
+      <div class="panel-body" style="padding: 0;">
+        <table class="price-table">
+          <thead>
+            <tr>
+              <th>Komoditas</th>
+              <th>Sumber</th>
+              <th style="text-align:right;">Harga / Perubahan</th>
+            </tr>
+          </thead>
+          <tbody id="priceTableBody">
+            <tr><td colspan="3" style="text-align:center; padding:24px; color:var(--text-3); font-size:12px;">Menunggu data live dari Kafka...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-        <div class="summary-grid">
-            <div class="summary-card">
-                <div class="card-icon">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                        </path>
-                    </svg>
-                </div>
-                <div class="card-label">Data API</div>
-                <div class="card-value" id="totalApi">-</div>
-                <div class="card-desc">Total data harga dari API</div>
-            </div>
-            <div class="summary-card">
-                <div class="card-icon">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z">
-                        </path>
-                    </svg>
-                </div>
-                <div class="card-label">Data RSS</div>
-                <div class="card-value" id="totalRss">-</div>
-                <div class="card-desc">Total berita dari RSS Feed</div>
-            </div>
-            <div class="summary-card">
-                <div class="card-icon">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
-                        </path>
-                    </svg>
-                </div>
-                <div class="card-label">Komoditas</div>
-                <div class="card-value" id="totalKomoditas">-</div>
-                <div class="card-desc">Jenis komoditas terdeteksi</div>
-            </div>
-            <div class="summary-card">
-                <div class="card-icon">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="card-label">Status Pipeline</div>
-                <div class="card-value" style="font-size: 1.25rem; margin-top: 0.5rem;">
-                    <span class="status-badge status-active">AKTIF</span>
-                </div>
-                <div class="card-desc">Auto-refresh setiap 30 detik</div>
-            </div>
+  <!-- BOTTOM GRID -->
+  <div class="bottom-grid">
+
+    <!-- TREN HARGA (ANALISIS 2) -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">ANALISIS 2 — TREN HARGA</span>
+        <span class="panel-badge badge-blue">SPARK SQL</span>
+      </div>
+      <div class="panel-body">
+        <div class="trend-wrap">
+          <canvas id="trendChart" role="img" aria-label="Bar chart rata-rata harga per komoditas">
+            Memuat data tren harga...
+          </canvas>
         </div>
-
-        <div class="charts-grid">
-            <div class="section">
-                <div class="section-header">
-                    <h2 class="section-title">Indeks Volatilitas</h2>
-                </div>
-                <div class="chart-container">
-                    <canvas id="volatilitasChart"></canvas>
-                </div>
-            </div>
-            <div class="section">
-                <div class="section-header">
-                    <h2 class="section-title">Tren Harga Komoditas</h2>
-                </div>
-                <div class="chart-container">
-                    <canvas id="trenChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-header">
-                <h2 class="section-title">Detail Analisis Volatilitas</h2>
-                <span class="last-update" id="volatilitasUpdate"></span>
-            </div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Komoditas</th>
-                            <th>Label</th>
-                            <th>Harga Tertinggi</th>
-                            <th>Harga Terendah</th>
-                            <th>Rata-rata</th>
-                            <th>Std Deviasi</th>
-                            <th>Indeks Volatilitas</th>
-                        </tr>
-                    </thead>
-                    <tbody id="volatilitasTable">
-                        <tr>
-                            <td colspan="7" style="text-align: center; color: var(--text-secondary);">Memuat data...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-header">
-                <h2 class="section-title">Korelasi Harga &amp; Berita</h2>
-                <span class="last-update" id="korelasiUpdate"></span>
-            </div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Komoditas</th>
-                            <th>Label</th>
-                            <th>Indeks Volatilitas</th>
-                            <th>Harga Rata-rata</th>
-                            <th>Jumlah Sebutan</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="korelasiTable">
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-secondary);">Memuat data...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="feed-grid">
-            <div class="section">
-                <div class="section-header">
-                    <h2 class="section-title">Data Harga Live Terbaru</h2>
-                    <span class="last-update" id="liveApiUpdate"></span>
-                </div>
-                <div id="liveApiFeed">
-                    <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Memuat data live...</p>
-                </div>
-            </div>
-            <div class="section">
-                <div class="section-header">
-                    <h2 class="section-title">Berita Ekonomi Terbaru</h2>
-                    <span class="last-update" id="liveRssUpdate"></span>
-                </div>
-                <div id="liveRssFeed">
-                    <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Memuat berita...</p>
-                </div>
-            </div>
-        </div>
-
-        <footer class="footer">
-            <p><strong>HargaPangan Dashboard</strong> | Kelompok 6 Big Data ETS</p>
-            <p style="margin-top: 0.5rem; font-size: 0.75rem;">Dibangun dengan Flask + Chart.js | Data diperbarui
-                otomatis dari HDFS</p>
-        </footer>
+      </div>
     </div>
 
-    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+    <!-- KORELASI BERITA (ANALISIS 3) -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">ANALISIS 3 — KORELASI BERITA</span>
+        <span class="panel-badge badge-amber">SPARK RESULT</span>
+      </div>
+      <div class="panel-body">
+        <div class="corr-list" id="corrList">
+          <div class="skeleton" style="width:100%;margin-bottom:8px;"></div>
+          <div class="skeleton" style="width:80%;margin-bottom:8px;"></div>
+          <div class="skeleton" style="width:60%;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- NEWS FEED (FULL WIDTH) -->
+  <div class="panel" style="margin-top:16px;">
+    <div class="panel-head">
+      <span class="panel-title">BERITA EKONOMI TERKINI</span>
+      <span class="panel-badge badge-blue">RSS LIVE</span>
+    </div>
+    <div class="panel-body">
+      <div class="news-list" id="newsList">
+        <div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px;">
+          Menunggu feed berita dari Kafka...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-left">
+      <div class="footer-stat">
+        <div class="footer-stat-dot" style="background:var(--green);" id="dotKafka"></div>
+        <span>Kafka</span>
+      </div>
+      <div class="footer-stat">
+        <div class="footer-stat-dot" style="background:var(--green);" id="dotHdfs"></div>
+        <span>HDFS</span>
+      </div>
+      <div class="footer-stat">
+        <div class="footer-stat-dot" style="background:var(--green);" id="dotSpark"></div>
+        <span>Spark</span>
+      </div>
+    </div>
+    <div class="footer-right">
+      Auto-refresh: <span id="countdown">30</span>s &nbsp;|&nbsp;
+      HargaPangan Pipeline · Kelompok 6 · ITS 2024
+    </div>
+  </footer>
+
+</div><!-- .wrap -->
+
+<script>
+// ── UTILITIES ──────────────────────────────────────────────
+const fmt = (n) => new Intl.NumberFormat('id-ID').format(Math.round(n));
+const fmtPct = (n) => n === null || n === undefined ? '—' : (n > 0 ? '+' : '') + n.toFixed(1) + '%';
+
+function komoditasLabel(key) {
+  const map = {
+    beras: 'Beras', jagung: 'Jagung', kedelai: 'Kedelai',
+    gula: 'Gula', minyak_goreng: 'Minyak Goreng',
+    cabai: 'Cabai', bawang_merah: 'Bawang Merah', telur: 'Telur'
+  };
+  return map[key] || key;
+}
+
+// ── CLOCK ──────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('id-ID', { hour12: false });
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── TICKER UPDATE ─────────────────────────────────────────
+function updateTicker(liveData) {
+  if (!liveData || !liveData.length) return;
+  const items = [...liveData, ...liveData]; // duplikat untuk seamless
+  const html = items.map(d => {
+    const pct = d.perubahan_pct;
+    let changeHtml = '';
+    if (pct === null || pct === undefined) {
+      changeHtml = `<span class="flat">— 0.0%</span>`;
+    } else if (pct > 0) {
+      changeHtml = `<span class="up">↑ ${pct.toFixed(1)}%</span>`;
+    } else if (pct < 0) {
+      changeHtml = `<span class="down">↓ ${Math.abs(pct).toFixed(1)}%</span>`;
+    } else {
+      changeHtml = `<span class="flat">→ 0.0%</span>`;
+    }
+    return `<span class="ticker-item">
+      <span class="name">${komoditasLabel(d.komoditas).toUpperCase()}</span>
+      <span class="price">Rp ${fmt(d.harga)}</span>
+      ${changeHtml}
+    </span>`;
+  }).join('');
+  document.getElementById('tickerInner').innerHTML = html;
+}
+
+// ── PRICE TABLE ───────────────────────────────────────────
+function updatePriceTable(liveData) {
+  const tbody = document.getElementById('priceTableBody');
+  if (!liveData || !liveData.length) return;
+
+  tbody.innerHTML = liveData.map(d => {
+    const pct = d.perubahan_pct;
+    let changePill = '';
+    if (pct === null || pct === undefined) {
+      changePill = `<span class="change-pill change-flat">— %</span>`;
+    } else if (pct > 0) {
+      changePill = `<span class="change-pill change-up">↑ ${pct.toFixed(1)}%</span>`;
+    } else if (pct < 0) {
+      changePill = `<span class="change-pill change-down">↓ ${Math.abs(pct).toFixed(1)}%</span>`;
+    } else {
+      changePill = `<span class="change-pill change-flat">→ 0.0%</span>`;
+    }
+
+    const sumber = (d.sumber || 'simulator').toUpperCase();
+    const sumberBadge = sumber === 'SIMULATOR'
+      ? `<span class="panel-badge badge-amber" style="font-size:9px;">${sumber}</span>`
+      : `<span class="panel-badge badge-green" style="font-size:9px;">${sumber}</span>`;
+
+    return `<tr>
+      <td>
+        <div class="kom-name">${komoditasLabel(d.komoditas)}</div>
+        <div class="kom-sub">${d.satuan || 'kg'} · ${d.wilayah || 'Nasional'}</div>
+      </td>
+      <td>${sumberBadge}</td>
+      <td>
+        <div class="price-val" style="margin-bottom:3px;">Rp ${fmt(d.harga)}</div>
+        <div style="text-align:right;">${changePill}</div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── CHART VOLATILITAS ─────────────────────────────────────
+let volChart = null;
+function updateVolChart(volatilitas) {
+  if (!volatilitas || !volatilitas.length) return;
+
+  const sorted = [...volatilitas].sort((a, b) => (b.indeks_volatilitas || 0) - (a.indeks_volatilitas || 0));
+  const labels = sorted.map(d => komoditasLabel(d.komoditas));
+  const data   = sorted.map(d => +(d.indeks_volatilitas || 0).toFixed(2));
+  const colors = data.map(v => v > 10 ? '#E63946' : v > 5 ? '#F5A623' : '#2DC653');
+
+  if (volChart) {
+    volChart.data.labels = labels;
+    volChart.data.datasets[0].data = data;
+    volChart.data.datasets[0].backgroundColor = colors;
+    volChart.update('active');
+    return;
+  }
+
+  volChart = new Chart(document.getElementById('volChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Indeks Volatilitas (%)',
+        data,
+        backgroundColor: colors,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#111922',
+          borderColor: 'rgba(245,166,35,0.3)',
+          borderWidth: 1,
+          titleColor: '#F5A623',
+          titleFont: { family: 'IBM Plex Mono', size: 12 },
+          bodyColor: '#8FA3B8',
+          bodyFont: { family: 'IBM Plex Mono', size: 11 },
+          callbacks: {
+            label: ctx => ` ${ctx.raw.toFixed(2)}% volatilitas`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#8FA3B8', font: { family: 'IBM Plex Mono', size: 11 } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: '#8FA3B8',
+            font: { family: 'IBM Plex Mono', size: 11 },
+            callback: v => v + '%'
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── CHART TREN HARGA ──────────────────────────────────────
+let trendChart = null;
+function updateTrendChart(tren) {
+  if (!tren || !tren.length) return;
+
+  const labels = tren.map(d => komoditasLabel(d.komoditas));
+  const dataAvg = tren.map(d => +(d.harga_rata2_keseluruhan || 0));
+  const dataMax = tren.map(d => +(d.harga_tertinggi_sepanjang || 0));
+  const dataMin = tren.map(d => +(d.harga_terendah_sepanjang || 0));
+
+  if (trendChart) {
+    trendChart.data.labels = labels;
+    trendChart.data.datasets[0].data = dataAvg;
+    trendChart.data.datasets[1].data = dataMax;
+    trendChart.data.datasets[2].data = dataMin;
+    trendChart.update('active');
+    return;
+  }
+
+  trendChart = new Chart(document.getElementById('trendChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Rata-rata',
+          data: dataAvg,
+          backgroundColor: '#F5A623',
+          borderRadius: 3,
+          borderSkipped: false,
+        },
+        {
+          label: 'Tertinggi',
+          data: dataMax,
+          backgroundColor: 'rgba(230,57,70,0.5)',
+          borderRadius: 3,
+          borderSkipped: false,
+        },
+        {
+          label: 'Terendah',
+          data: dataMin,
+          backgroundColor: 'rgba(45,198,83,0.5)',
+          borderRadius: 3,
+          borderSkipped: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#111922',
+          borderColor: 'rgba(245,166,35,0.3)',
+          borderWidth: 1,
+          titleColor: '#F5A623',
+          titleFont: { family: 'IBM Plex Mono', size: 11 },
+          bodyColor: '#8FA3B8',
+          bodyFont: { family: 'IBM Plex Mono', size: 10 },
+          callbacks: {
+            label: ctx => ` Rp ${new Intl.NumberFormat('id-ID').format(Math.round(ctx.raw))}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.03)' },
+          ticks: { color: '#8FA3B8', font: { family: 'IBM Plex Mono', size: 10 } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.03)' },
+          ticks: {
+            color: '#8FA3B8',
+            font: { family: 'IBM Plex Mono', size: 10 },
+            callback: v => 'Rp ' + new Intl.NumberFormat('id-ID').format(v)
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── KORELASI BERITA ───────────────────────────────────────
+function updateCorr(korelasi) {
+  if (!korelasi || !korelasi.length) return;
+
+  const maxSebutan = Math.max(...korelasi.map(d => d.jumlah_sebutan || 0), 1);
+  const html = korelasi.map(d => {
+    const pct = Math.round(((d.jumlah_sebutan || 0) / maxSebutan) * 100);
+    const status = d.status_korelasi || '';
+    let barColor = '#F5A623';
+    if (status.includes('WASPADA')) barColor = '#E63946';
+    else if (status.includes('TINGGI')) barColor = '#F5A623';
+    else if (status.includes('MODERAT')) barColor = '#3B82F6';
+    else barColor = '#2DC653';
+
+    return `<div class="corr-item">
+      <span class="corr-name">${komoditasLabel(d.komoditas)}</span>
+      <div class="corr-bar-wrap">
+        <div class="corr-bar" style="width:${pct}%;background:${barColor};"></div>
+      </div>
+      <span class="corr-val">${d.jumlah_sebutan || 0}x</span>
+    </div>
+    <div style="font-size:10px;color:var(--text-3);margin:2px 0 8px 100px;font-family:var(--font-mono);">
+      ${status}
+    </div>`;
+  }).join('');
+
+  document.getElementById('corrList').innerHTML = html;
+}
+
+// ── NEWS FEED ─────────────────────────────────────────────
+function updateNews(berita) {
+  if (!berita || !berita.length) return;
+
+  const html = berita.slice(0, 8).map(b => {
+    const kom = b.komoditas || 'umum';
+    const title = b.title || 'Berita Tanpa Judul';
+    const link  = b.link  || '#';
+    const ts    = b.timestamp || b.published || '';
+    const tsShort = ts ? ts.replace('T', ' ').substring(0, 16) : '—';
+
+    return `<div class="news-item">
+      <div class="news-tag">${komoditasLabel(kom).toUpperCase()}</div>
+      <div class="news-content">
+        <div class="news-title"><a href="${link}" target="_blank">${title}</a></div>
+        <div class="news-meta">${tsShort}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('newsList').innerHTML = html || `
+    <div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px;">
+      Belum ada berita tersedia
+    </div>`;
+}
+
+// ── METRIC CARDS ──────────────────────────────────────────
+function updateMetrics(data) {
+  const spark = data.spark || {};
+  const meta  = spark.metadata || {};
+  const vol   = spark.analisis_1_volatilitas || [];
+
+  const volatile = vol.filter(d => (d.indeks_volatilitas || 0) > 10).length;
+
+  document.getElementById('metricData').textContent    = meta.total_data_api || 0;
+  document.getElementById('metricNews').textContent    = (data.berita || []).length;
+  document.getElementById('metricVolatile').textContent = volatile;
+}
+
+// ── STATUS UPDATE ─────────────────────────────────────────
+function updateStatus(data) {
+  const status = data.status || {};
+  const isOk   = status.spark_ok || status.live_ok || status.news_ok;
+
+  const dot    = document.getElementById('statusDot');
+  const label  = document.getElementById('pipelineStatus');
+
+  if (isOk) {
+    dot.style.background = '#2DC653';
+    label.textContent = 'PIPELINE AKTIF';
+  } else {
+    dot.style.background = '#E63946';
+    label.textContent = 'Menunggu Data...';
+  }
+
+  document.getElementById('dotSpark').style.background = status.spark_ok ? '#2DC653' : '#4A6275';
+  document.getElementById('dotHdfs').style.background  = status.live_ok  ? '#2DC653' : '#4A6275';
+  document.getElementById('dotKafka').style.background = status.news_ok  ? '#2DC653' : '#4A6275';
+}
+
+// ── MAIN FETCH ────────────────────────────────────────────
+async function fetchData() {
+  let data;
+  try {
+    const res = await fetch('/api/data');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    // Gunakan text() dulu lalu parse manual — menghindari crash jika ada NaN dari server
+    const text = await res.text();
+    data = JSON.parse(text);
+  } catch (err) {
+    console.error('[fetchData] Gagal fetch/parse:', err);
+    document.getElementById('pipelineStatus').textContent = 'Koneksi Gagal';
+    document.getElementById('statusDot').style.background = '#E63946';
+    return;
+  }
+
+  try { updateStatus(data); }   catch(e) { console.warn('updateStatus error:', e); }
+  try { updateMetrics(data); }  catch(e) { console.warn('updateMetrics error:', e); }
+
+  const liveHarga = Array.isArray(data.live_harga) ? data.live_harga : [];
+  const berita    = Array.isArray(data.berita)     ? data.berita     : [];
+  const spark     = (data.spark && typeof data.spark === 'object') ? data.spark : {};
+
+  try { updateTicker(liveHarga); }     catch(e) { console.warn('updateTicker error:', e); }
+  try { updatePriceTable(liveHarga); } catch(e) { console.warn('updatePriceTable error:', e); }
+  try { updateNews(berita); }          catch(e) { console.warn('updateNews error:', e); }
+
+  const vol   = Array.isArray(spark.analisis_1_volatilitas)     ? spark.analisis_1_volatilitas     : [];
+  const tren  = Array.isArray(spark.analisis_2_tren_harga)      ? spark.analisis_2_tren_harga      : [];
+  const korr  = Array.isArray(spark.analisis_3_korelasi_berita) ? spark.analisis_3_korelasi_berita : [];
+
+  try { updateVolChart(vol);   } catch(e) { console.warn('updateVolChart error:', e); }
+  try { updateTrendChart(tren);} catch(e) { console.warn('updateTrendChart error:', e); }
+  try { updateCorr(korr);      } catch(e) { console.warn('updateCorr error:', e); }
+
+  console.log('[fetchData] OK —',
+    `live=${liveHarga.length}`,
+    `berita=${berita.length}`,
+    `vol=${vol.length}`,
+    `tren=${tren.length}`,
+    `korr=${korr.length}`
+  );
+}
+
+// ── AUTO REFRESH ──────────────────────────────────────────
+const REFRESH_SEC = 30;
+let countdown = REFRESH_SEC;
+const bar = document.getElementById('refreshBar');
+
+function tick() {
+  countdown--;
+  document.getElementById('countdown').textContent = countdown;
+  bar.style.width = ((REFRESH_SEC - countdown) / REFRESH_SEC * 100) + '%';
+
+  if (countdown <= 0) {
+    countdown = REFRESH_SEC;
+    bar.style.width = '0%';
+    fetchData();
+  }
+}
+
+// Initial load
+fetchData();
+setInterval(tick, 1000);
+</script>
 </body>
-
 </html>

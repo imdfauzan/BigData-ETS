@@ -1,15 +1,12 @@
 """
-consumer_to_hdfs.py — Widi as Anggota 3: Consumer ke HDFS
-Topik 8: HargaPangan - Monitor Harga Komoditas Bahan Pokok
+consumer_to_hdfs.py — Adiwidya Budi P (Anggota 3): Consumer Kafka → HDFS + Dashboard
+Topik: HargaPangan - Monitor Harga Komoditas Bahan Pokok
 
-Fungsi:
-  - Baca dari 2 Kafka topic: 'pangan-api' dan 'pangan-rss' secara paralel (threading)
-  - Kumpulkan event dalam buffer selama FLUSH_INTERVAL (default: 2 menit)
-  - Setiap flush: simpan buffer ke file lokal → copy ke HDFS via subprocess
-  - Nama file menggunakan format timestamp: 2026-04-20_14-30.json
-
-Strategi: Opsi A — save lokal dulu, lalu subprocess hdfs dfs -put
-  (sesuai FAQ: "Cara menyimpan ke HDFS dari Python?")
+Alur data:
+  Kafka (pangan-api + pangan-rss)
+      → buffer 2 menit
+      → HDFS /data/pangan/api/ dan /data/pangan/rss/
+      → dashboard/data/live_api.json dan live_rss.json  ← untuk Flask dashboard
 """
 
 import json
@@ -19,7 +16,6 @@ import subprocess
 import threading
 import time
 
-from collections import defaultdict
 from datetime import datetime
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
@@ -28,18 +24,35 @@ from kafka.errors import KafkaError
 # KONFIGURASI
 # ─────────────────────────────────────────────
 
-KAFKA_BROKER    = "127.0.0.1:9092"
-TOPICS          = ["pangan-api", "pangan-rss"]
-CONSUMER_GROUP  = "pangan-hdfs-consumer"     # group_id unik agar offset di-track Kafka
-FLUSH_INTERVAL  = 2 * 60                     # 2 menit dalam detik (buffer sebelum simpan ke HDFS)
-LOCAL_TMP_DIR   = "/tmp/pangan_buffer"       # direktori sementara di lokal
-HDFS_BASE       = "/data/pangan"             # direktori dasar di HDFS
+KAFKA_BROKER   = os.getenv("KAFKA_BROKER", "localhost:9092")
+TOPICS         = ["pangan-api", "pangan-rss"]
+CONSUMER_GROUP = "pangan-hdfs-consumer"
+FLUSH_INTERVAL = 2 * 60                   # 2 menit
 
-# Mapping topic → folder HDFS
+# Path lokal sementara sebelum upload ke HDFS (use /tmp for portability)
+LOCAL_TMP_DIR  = os.path.join(os.getenv("HOME", "/tmp"), ".pangan_buffer")
+
+# Path HDFS
+HDFS_BASE = "/data/pangan"
 HDFS_FOLDER = {
     "pangan-api": f"{HDFS_BASE}/api",
     "pangan-rss": f"{HDFS_BASE}/rss",
 }
+
+# Path dashboard lokal — Flask membaca dari sini
+DASHBOARD_DATA_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "dashboard", "data"
+)
+
+# File live per topic
+DASHBOARD_FILE = {
+    "pangan-api": os.path.join(DASHBOARD_DATA_DIR, "live_api.json"),
+    "pangan-rss": os.path.join(DASHBOARD_DATA_DIR, "live_rss.json"),
+}
+
+# Maksimal entry yang disimpan di live JSON (hindari file terlalu besar)
+MAX_LIVE_ENTRIES = 200
 
 # ─────────────────────────────────────────────
 # LOGGING
@@ -58,105 +71,166 @@ log = logging.getLogger("consumer_hdfs")
 # ─────────────────────────────────────────────
 
 def hdfs_mkdir(folder: str):
-    """Buat direktori di HDFS jika belum ada."""
     result = subprocess.run(
         ["docker", "exec", "namenode", "hdfs", "dfs", "-mkdir", "-p", folder],
         capture_output=True, text=True
     )
     if result.returncode != 0:
-        log.warning(f"[HDFS] mkdir gagal untuk {folder}: {result.stderr.strip()}")
+        log.warning(f"[HDFS] mkdir gagal: {result.stderr.strip()}")
 
 
 def hdfs_put(local_path: str, hdfs_folder: str) -> bool:
-    """
-    Upload file lokal ke HDFS melalui namenode container.
-    Return True jika berhasil.
-    """
     filename = os.path.basename(local_path)
 
-    # Step 1: copy file ke dalam container namenode
-    cp_result = subprocess.run(
+    # Step 1: copy ke container namenode
+    cp = subprocess.run(
         ["docker", "cp", local_path, f"namenode:/tmp/{filename}"],
         capture_output=True, text=True
     )
-    if cp_result.returncode != 0:
-        log.error(f"[HDFS] docker cp gagal: {cp_result.stderr.strip()}")
+    if cp.returncode != 0:
+        log.error(f"[HDFS] docker cp gagal: {cp.stderr.strip()}")
         return False
 
-    # Step 2: buat direktori HDFS (idempoten)
+    # Step 2: pastikan folder ada
     hdfs_mkdir(hdfs_folder)
 
     # Step 3: put ke HDFS
-    put_result = subprocess.run(
-        ["docker", "exec", "namenode", "hdfs", "dfs", "-put", "-f",
-         f"/tmp/{filename}", hdfs_folder],
+    put = subprocess.run(
+        ["docker", "exec", "namenode", "hdfs", "dfs",
+         "-put", "-f", f"/tmp/{filename}", hdfs_folder],
         capture_output=True, text=True
     )
-    if put_result.returncode != 0:
-        log.error(f"[HDFS] hdfs put gagal: {put_result.stderr.strip()}")
+    if put.returncode != 0:
+        log.error(f"[HDFS] put gagal: {put.stderr.strip()}")
         return False
 
-    log.info(f"[HDFS] ✓ Tersimpan: {hdfs_folder}/{filename}")
+    log.info(f"[HDFS] ✓ {hdfs_folder}/{filename}")
     return True
 
 
-def flush_buffer_ke_hdfs(buffer: list, topic: str):
+# ─────────────────────────────────────────────
+# DASHBOARD HELPER — KUNCI KONEKSI BACKEND↔FRONTEND
+# ─────────────────────────────────────────────
+
+def simpan_live_dashboard(buffer: list, topic: str):
     """
-    Simpan buffer event ke file JSON lokal, lalu upload ke HDFS.
-    Nama file: YYYY-MM-DD_HH-MM.json (sesuai format rubrik)
+    Simpan salinan lokal terbaru ke dashboard/data/ agar Flask bisa membacanya.
+
+    Format yang diharapkan frontend:
+      live_api.json → list of: {komoditas, label, harga, satuan, wilayah,
+                                 perubahan_pct, sumber, tanggal, timestamp_iso}
+      live_rss.json → list of: {title, link, summary, komoditas, timestamp,
+                                 source_feed, published}
+
+    Entry diurutkan: terbaru di akhir (frontend mengambil dari belakang).
     """
+    os.makedirs(DASHBOARD_DATA_DIR, exist_ok=True)
+    path = DASHBOARD_FILE.get(topic)
+    if not path:
+        return
+
+    # Baca data lama
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            existing = json.load(f)
+        if not isinstance(existing, list):
+            existing = []
+    except (FileNotFoundError, json.JSONDecodeError):
+        existing = []
+
+    # Filter buffer — hanya ambil field yang relevan untuk frontend
+    filtered = []
+    for item in buffer:
+        if not isinstance(item, dict):
+            continue
+        if topic == "pangan-api":
+            filtered.append({
+                "komoditas"     : item.get("komoditas", ""),
+                "label"         : item.get("label", ""),
+                "harga"         : item.get("harga", 0),
+                "satuan"        : item.get("satuan", "kg"),
+                "wilayah"       : item.get("wilayah", "Nasional"),
+                "harga_acuan"   : item.get("harga_acuan"),
+                "perubahan_pct" : item.get("perubahan_pct"),
+                "sumber"        : item.get("sumber", "simulator"),
+                "tanggal"       : item.get("tanggal", ""),
+                "jam"           : item.get("jam", ""),
+                "timestamp_iso" : item.get("timestamp_iso", datetime.now().isoformat()),
+            })
+        elif topic == "pangan-rss":
+            filtered.append({
+                "title"       : item.get("title", ""),
+                "link"        : item.get("link", "#"),
+                "summary"     : item.get("summary", "")[:300],
+                "komoditas"   : item.get("komoditas", "umum"),
+                "timestamp"   : item.get("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                "published"   : item.get("published", ""),
+                "source_feed" : item.get("source_feed", ""),
+            })
+
+    # Gabungkan & batasi ukuran
+    combined = existing + filtered
+    combined = combined[-MAX_LIVE_ENTRIES:]
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(combined, f, ensure_ascii=False, indent=2, default=str)
+
+    log.info(f"[Dashboard] ✓ {os.path.basename(path)} diperbarui ({len(combined)} entry)")
+
+
+# ─────────────────────────────────────────────
+# FLUSH: HDFS + DASHBOARD (DIPANGGIL TIAP 2 MENIT)
+# ─────────────────────────────────────────────
+
+def flush_buffer(buffer: list, topic: str):
+    """Simpan buffer ke HDFS dan perbarui file live dashboard."""
     if not buffer:
         return
 
-    # Format nama file: 2026-04-20_14-30.json
+    # ── 1. Simpan ke file lokal sementara ──
     timestamp_str = datetime.now().strftime("%Y-%m-%d_%H-%M")
     filename      = f"{timestamp_str}.json"
-    local_path    = os.path.join(LOCAL_TMP_DIR, topic.replace("-", "_"), filename)
+    local_dir     = os.path.join(LOCAL_TMP_DIR, topic.replace("-", "_"))
+    local_path    = os.path.join(local_dir, filename)
+    os.makedirs(local_dir, exist_ok=True)
 
-    # Pastikan direktori lokal ada
-    os.makedirs(os.path.dirname(local_path), exist_ok=True)
-
-    # Tulis buffer ke file lokal
     with open(local_path, "w", encoding="utf-8") as f:
-        json.dump(buffer, f, ensure_ascii=False, indent=2)
+        json.dump(buffer, f, ensure_ascii=False, indent=2, default=str)
 
     log.info(f"[Buffer] {topic}: {len(buffer)} event → {local_path}")
 
-    # Upload ke HDFS
+    # ── 2. Upload ke HDFS ──
     hdfs_folder = HDFS_FOLDER.get(topic, f"{HDFS_BASE}/unknown")
     success = hdfs_put(local_path, hdfs_folder)
-
     if success:
-        # Hapus file lokal setelah berhasil upload
         try:
             os.remove(local_path)
         except OSError:
             pass
 
+    # ── 3. Perbarui live JSON untuk Flask dashboard ──
+    simpan_live_dashboard(buffer, topic)
+
 
 # ─────────────────────────────────────────────
-# CONSUMER WORKER (PER TOPIC)
+# CONSUMER WORKER (1 THREAD PER TOPIC)
 # ─────────────────────────────────────────────
 
 def consumer_worker(topic: str, stop_event: threading.Event):
-    """
-    Worker thread untuk membaca satu Kafka topic.
-    Buffer event selama FLUSH_INTERVAL, lalu flush ke HDFS.
-    """
-    log.info(f"[Worker] Thread dimulai untuk topic: {topic}")
+    log.info(f"[Worker] Memulai thread untuk topic: {topic}")
 
     try:
         consumer = KafkaConsumer(
             topic,
-            bootstrap_servers  = [KAFKA_BROKER],
-            auto_offset_reset  = "earliest",    # baca dari awal jika grup baru
-            group_id           = CONSUMER_GROUP, # unik agar Kafka track offset
-            enable_auto_commit = True,
-            value_deserializer = lambda m: json.loads(m.decode("utf-8")),
-            consumer_timeout_ms= 1000,           # timeout agar loop bisa cek stop_event
+            bootstrap_servers   = [KAFKA_BROKER],
+            auto_offset_reset   = "earliest",
+            group_id            = CONSUMER_GROUP,
+            enable_auto_commit  = True,
+            value_deserializer  = lambda m: json.loads(m.decode("utf-8")),
+            consumer_timeout_ms = 1000,
         )
     except KafkaError as e:
-        log.error(f"[Worker] Gagal terhubung ke Kafka untuk topic {topic}: {e}")
+        log.error(f"[Worker] Gagal konek Kafka untuk {topic}: {e}")
         return
 
     buffer        = []
@@ -164,16 +238,18 @@ def consumer_worker(topic: str, stop_event: threading.Event):
 
     try:
         while not stop_event.is_set():
-            # Poll messages (non-blocking karena consumer_timeout_ms=1000)
             try:
                 for msg in consumer:
                     buffer.append(msg.value)
-                    log.info(f"[{topic}] Diterima: {json.dumps(msg.value)[:80]}...")
+                    log.info(
+                        f"[{topic}] Diterima ({len(buffer)}): "
+                        f"{str(msg.value)[:80]}..."
+                    )
 
-                    # Flush jika sudah FLUSH_INTERVAL detik
+                    # Flush jika waktu sudah cukup
                     if time.time() - last_flush_ts >= FLUSH_INTERVAL:
-                        log.info(f"[{topic}] Flush {len(buffer)} event ke HDFS...")
-                        flush_buffer_ke_hdfs(buffer, topic)
+                        log.info(f"[{topic}] Flush {len(buffer)} event...")
+                        flush_buffer(buffer, topic)
                         buffer        = []
                         last_flush_ts = time.time()
 
@@ -181,13 +257,12 @@ def consumer_worker(topic: str, stop_event: threading.Event):
                         break
 
             except StopIteration:
-                # consumer_timeout_ms habis, tidak ada pesan baru — cek flush
                 pass
 
-            # Flush berdasarkan waktu meski tidak ada pesan baru
+            # Flush periodik meskipun tidak ada pesan baru
             if buffer and (time.time() - last_flush_ts >= FLUSH_INTERVAL):
-                log.info(f"[{topic}] Flush periodik {len(buffer)} event ke HDFS...")
-                flush_buffer_ke_hdfs(buffer, topic)
+                log.info(f"[{topic}] Flush periodik {len(buffer)} event...")
+                flush_buffer(buffer, topic)
                 buffer        = []
                 last_flush_ts = time.time()
 
@@ -195,12 +270,12 @@ def consumer_worker(topic: str, stop_event: threading.Event):
         log.error(f"[Worker] Error pada topic {topic}: {e}", exc_info=True)
 
     finally:
-        # Flush sisa buffer sebelum shutdown
+        # Flush sisa buffer saat shutdown
         if buffer:
             log.info(f"[{topic}] Flush akhir {len(buffer)} event sebelum shutdown...")
-            flush_buffer_ke_hdfs(buffer, topic)
+            flush_buffer(buffer, topic)
         consumer.close()
-        log.info(f"[Worker] Thread selesai untuk topic: {topic}")
+        log.info(f"[Worker] Thread selesai: {topic}")
 
 
 # ─────────────────────────────────────────────
@@ -209,61 +284,56 @@ def consumer_worker(topic: str, stop_event: threading.Event):
 
 def main():
     log.info("╔══════════════════════════════════════════════════════╗")
-    log.info("║  HargaPangan Monitor — consumer_to_hdfs.py           ║")
-    log.info("║  Anggota 3: Consumer Kafka → HDFS                    ║")
+    log.info("║  HargaPangan — consumer_to_hdfs.py                   ║")
+    log.info("║  Kafka → HDFS + Dashboard Live Files                 ║")
     log.info("╚══════════════════════════════════════════════════════╝")
-    log.info(f"Kafka Broker   : {KAFKA_BROKER}")
-    log.info(f"Topics         : {TOPICS}")
-    log.info(f"Consumer Group : {CONSUMER_GROUP}")
-    log.info(f"Flush Interval : {FLUSH_INTERVAL // 60} menit")
-    log.info(f"HDFS Base      : {HDFS_BASE}")
+    log.info(f"Kafka Broker     : {KAFKA_BROKER}")
+    log.info(f"Topics           : {TOPICS}")
+    log.info(f"Consumer Group   : {CONSUMER_GROUP}")
+    log.info(f"Flush Interval   : {FLUSH_INTERVAL // 60} menit")
+    log.info(f"HDFS Base        : {HDFS_BASE}")
+    log.info(f"Dashboard Dir    : {DASHBOARD_DATA_DIR}")
 
-    # Buat direktori HDFS awal
+    # Buat folder HDFS awal
     for folder in HDFS_FOLDER.values():
         hdfs_mkdir(folder)
-    hdfs_mkdir(f"{HDFS_BASE}/hasil")   # untuk output Spark nanti
+    hdfs_mkdir(f"{HDFS_BASE}/hasil")
 
-    # Buat direktori lokal tmp
-    os.makedirs(LOCAL_TMP_DIR, exist_ok=True)
+    # Buat folder lokal
+    os.makedirs(LOCAL_TMP_DIR,    exist_ok=True)
+    os.makedirs(DASHBOARD_DATA_DIR, exist_ok=True)
 
-    # Event untuk sinyal stop semua thread
     stop_event = threading.Event()
 
-    # Buat satu thread per topic (paralel)
     threads = []
     for topic in TOPICS:
         t = threading.Thread(
-            target=consumer_worker,
-            args=(topic, stop_event),
-            name=f"consumer-{topic}",
-            daemon=True,
+            target = consumer_worker,
+            args   = (topic, stop_event),
+            name   = f"consumer-{topic}",
+            daemon = True,
         )
         threads.append(t)
         t.start()
         log.info(f"[Main] Thread dimulai: consumer-{topic}")
 
-    log.info(f"\n[Main] {len(threads)} consumer thread berjalan. Tekan Ctrl+C untuk berhenti.\n")
+    log.info(f"\n[Main] {len(threads)} thread berjalan. Ctrl+C untuk berhenti.\n")
 
     try:
-        # Tunggu semua thread
         while True:
             alive = [t for t in threads if t.is_alive()]
             if not alive:
-                log.warning("[Main] Semua thread sudah berhenti.")
+                log.warning("[Main] Semua thread berhenti.")
                 break
             time.sleep(5)
-
     except KeyboardInterrupt:
-        log.info("\n[Main] Ctrl+C diterima. Menghentikan semua consumer...")
+        log.info("\n[Main] Ctrl+C — menghentikan semua consumer...")
         stop_event.set()
 
-    # Tunggu thread selesai flush dan cleanup (max 30 detik)
     for t in threads:
         t.join(timeout=30)
-        if t.is_alive():
-            log.warning(f"[Main] Thread {t.name} tidak selesai dalam 30 detik.")
 
-    log.info("[Main] Consumer shutdown selesai.")
+    log.info("[Main] Shutdown selesai.")
 
 
 if __name__ == "__main__":
