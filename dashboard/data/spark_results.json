@@ -1,12 +1,12 @@
 {
   "metadata": {
     "generated_by": "Theodorus Aaron Ugraha (Anggota 4)",
-    "generated_at": "2026-05-25T14:17:25.033885",
+    "generated_at": "2026-05-25T14:58:16.239835",
     "pipeline": "HargaPangan-Kelompok6",
     "data_source_api": "local",
     "data_source_rss": "local",
     "hdfs_namenode": "namenode:8020",
-    "total_data_api": 78,
+    "total_data_api": 95,
     "total_data_rss": 200
   },
   "analyses": {
@@ -16,29 +16,29 @@
         "label": "Cabai",
         "harga_max": 48004.81,
         "harga_min": 41958.1,
-        "harga_avg": 45299.39,
-        "harga_stddev": 1879.2,
-        "jumlah_data": 10,
-        "indeks_volatilitas": 13.35
+        "harga_avg": 45270.48,
+        "harga_stddev": 1703.25,
+        "jumlah_data": 12,
+        "indeks_volatilitas": 13.36
       },
       {
         "komoditas": "bawang_merah",
         "label": "Bawang Merah",
         "harga_max": 39832.89,
-        "harga_min": 37179.92,
-        "harga_avg": 38379.07,
-        "harga_stddev": 877.55,
-        "jumlah_data": 9,
-        "indeks_volatilitas": 6.91
+        "harga_min": 35957.29,
+        "harga_avg": 37962.44,
+        "harga_stddev": 1216.03,
+        "jumlah_data": 11,
+        "indeks_volatilitas": 10.21
       },
       {
         "komoditas": "jagung",
         "label": "Jagung",
         "harga_max": 5879.84,
         "harga_min": 5719.86,
-        "harga_avg": 5770.55,
-        "harga_stddev": 44.33,
-        "jumlah_data": 10,
+        "harga_avg": 5774.63,
+        "harga_stddev": 41.29,
+        "jumlah_data": 12,
         "indeks_volatilitas": 2.77
       },
       {
@@ -46,9 +46,9 @@
         "label": "Kedelai",
         "harga_max": 12155.13,
         "harga_min": 11934.44,
-        "harga_avg": 12059.14,
-        "harga_stddev": 66.24,
-        "jumlah_data": 10,
+        "harga_avg": 12054.51,
+        "harga_stddev": 63.28,
+        "jumlah_data": 12,
         "indeks_volatilitas": 1.83
       },
       {
@@ -56,9 +56,9 @@
         "label": "Gula",
         "harga_max": 17165.94,
         "harga_min": 16891.88,
-        "harga_avg": 17049.26,
-        "harga_stddev": 72.15,
-        "jumlah_data": 10,
+        "harga_avg": 17057.91,
+        "harga_stddev": 69.75,
+        "jumlah_data": 12,
         "indeks_volatilitas": 1.61
       },
       {
@@ -66,168 +66,168 @@
         "label": "Telur",
         "harga_max": 29316.65,
         "harga_min": 28857.59,
-        "harga_avg": 29180.28,
-        "harga_stddev": 133.9,
-        "jumlah_data": 9,
+        "harga_avg": 29189.27,
+        "harga_stddev": 121.87,
+        "jumlah_data": 11,
         "indeks_volatilitas": 1.57
       },
       {
         "komoditas": "beras",
         "label": "Beras",
         "harga_max": 14602.12,
-        "harga_min": 14409.63,
-        "harga_avg": 14506.5,
-        "harga_stddev": 51.82,
-        "jumlah_data": 10,
-        "indeks_volatilitas": 1.33
+        "harga_min": 14394.22,
+        "harga_avg": 14492.49,
+        "harga_stddev": 55.29,
+        "jumlah_data": 13,
+        "indeks_volatilitas": 1.43
       },
       {
         "komoditas": "minyak_goreng",
         "label": "Minyak Goreng",
         "harga_max": 17584.39,
-        "harga_min": 17401.59,
-        "harga_avg": 17486.34,
-        "harga_stddev": 56.87,
-        "jumlah_data": 10,
-        "indeks_volatilitas": 1.05
+        "harga_min": 17369.53,
+        "harga_avg": 17482.59,
+        "harga_stddev": 65.87,
+        "jumlah_data": 12,
+        "indeks_volatilitas": 1.23
       }
     ],
     "analisis_2_tren_harga": [
       {
         "komoditas": "cabai",
         "label": "Cabai",
-        "harga_rata2_keseluruhan": 45299.39,
+        "harga_rata2_keseluruhan": 45270.48,
         "harga_terendah_sepanjang": 41958.1,
         "harga_tertinggi_sepanjang": 48004.81,
-        "jumlah_hari_data": 1,
-        "total_observasi": 10
+        "jumlah_hari_data": 2,
+        "total_observasi": 12
       },
       {
         "komoditas": "bawang_merah",
         "label": "Bawang Merah",
-        "harga_rata2_keseluruhan": 38379.07,
-        "harga_terendah_sepanjang": 37179.92,
+        "harga_rata2_keseluruhan": 37962.44,
+        "harga_terendah_sepanjang": 35957.29,
         "harga_tertinggi_sepanjang": 39832.89,
-        "jumlah_hari_data": 1,
-        "total_observasi": 9
+        "jumlah_hari_data": 2,
+        "total_observasi": 11
       },
       {
         "komoditas": "telur",
         "label": "Telur",
-        "harga_rata2_keseluruhan": 29180.28,
+        "harga_rata2_keseluruhan": 29189.27,
         "harga_terendah_sepanjang": 28857.59,
         "harga_tertinggi_sepanjang": 29316.65,
-        "jumlah_hari_data": 1,
-        "total_observasi": 9
+        "jumlah_hari_data": 2,
+        "total_observasi": 11
       },
       {
         "komoditas": "minyak_goreng",
         "label": "Minyak Goreng",
-        "harga_rata2_keseluruhan": 17486.34,
-        "harga_terendah_sepanjang": 17401.59,
+        "harga_rata2_keseluruhan": 17482.59,
+        "harga_terendah_sepanjang": 17369.53,
         "harga_tertinggi_sepanjang": 17584.39,
-        "jumlah_hari_data": 1,
-        "total_observasi": 10
+        "jumlah_hari_data": 2,
+        "total_observasi": 12
       },
       {
         "komoditas": "gula",
         "label": "Gula",
-        "harga_rata2_keseluruhan": 17049.26,
+        "harga_rata2_keseluruhan": 17057.91,
         "harga_terendah_sepanjang": 16891.88,
         "harga_tertinggi_sepanjang": 17165.94,
-        "jumlah_hari_data": 1,
-        "total_observasi": 10
+        "jumlah_hari_data": 2,
+        "total_observasi": 12
       },
       {
         "komoditas": "beras",
         "label": "Beras",
-        "harga_rata2_keseluruhan": 14506.5,
-        "harga_terendah_sepanjang": 14409.63,
+        "harga_rata2_keseluruhan": 14492.49,
+        "harga_terendah_sepanjang": 14394.22,
         "harga_tertinggi_sepanjang": 14602.12,
-        "jumlah_hari_data": 1,
-        "total_observasi": 10
+        "jumlah_hari_data": 2,
+        "total_observasi": 13
       },
       {
         "komoditas": "kedelai",
         "label": "Kedelai",
-        "harga_rata2_keseluruhan": 12059.14,
+        "harga_rata2_keseluruhan": 12054.51,
         "harga_terendah_sepanjang": 11934.44,
         "harga_tertinggi_sepanjang": 12155.13,
-        "jumlah_hari_data": 1,
-        "total_observasi": 10
+        "jumlah_hari_data": 2,
+        "total_observasi": 12
       },
       {
         "komoditas": "jagung",
         "label": "Jagung",
-        "harga_rata2_keseluruhan": 5770.55,
+        "harga_rata2_keseluruhan": 5774.63,
         "harga_terendah_sepanjang": 5719.86,
         "harga_tertinggi_sepanjang": 5879.84,
-        "jumlah_hari_data": 1,
-        "total_observasi": 10
+        "jumlah_hari_data": 2,
+        "total_observasi": 12
       }
     ],
     "analisis_3_korelasi_berita": [
       {
         "komoditas": "cabai",
         "label": "Cabai",
-        "indeks_volatilitas": 13.35,
-        "harga_avg": 45299.39,
-        "jumlah_sebutan": 32,
+        "indeks_volatilitas": 13.36,
+        "harga_avg": 45270.48,
+        "jumlah_sebutan": 25,
         "status_korelasi": "TINGGI: Banyak liputan + Harga bergejolak"
-      },
-      {
-        "komoditas": "bawang_merah",
-        "label": "Bawang Merah",
-        "indeks_volatilitas": 6.91,
-        "harga_avg": 38379.07,
-        "jumlah_sebutan": 10,
-        "status_korelasi": "MODERAT: Sering diberitakan, harga relatif stabil"
       },
       {
         "komoditas": "minyak_goreng",
         "label": "Minyak Goreng",
-        "indeks_volatilitas": 1.05,
-        "harga_avg": 17486.34,
-        "jumlah_sebutan": 9,
-        "status_korelasi": "MODERAT: Sering diberitakan, harga relatif stabil"
-      },
-      {
-        "komoditas": "telur",
-        "label": "Telur",
-        "indeks_volatilitas": 1.57,
-        "harga_avg": 29180.28,
-        "jumlah_sebutan": 8,
+        "indeks_volatilitas": 1.23,
+        "harga_avg": 17482.59,
+        "jumlah_sebutan": 13,
         "status_korelasi": "MODERAT: Sering diberitakan, harga relatif stabil"
       },
       {
         "komoditas": "beras",
         "label": "Beras",
-        "indeks_volatilitas": 1.33,
-        "harga_avg": 14506.5,
-        "jumlah_sebutan": 6,
+        "indeks_volatilitas": 1.43,
+        "harga_avg": 14492.49,
+        "jumlah_sebutan": 7,
         "status_korelasi": "MODERAT: Sering diberitakan, harga relatif stabil"
-      },
-      {
-        "komoditas": "jagung",
-        "label": "Jagung",
-        "indeks_volatilitas": 2.77,
-        "harga_avg": 5770.55,
-        "jumlah_sebutan": 3,
-        "status_korelasi": "RENDAH: Stabil dan jarang diberitakan"
       },
       {
         "komoditas": "gula",
         "label": "Gula",
         "indeks_volatilitas": 1.61,
-        "harga_avg": 17049.26,
+        "harga_avg": 17057.91,
+        "jumlah_sebutan": 5,
+        "status_korelasi": "RENDAH: Stabil dan jarang diberitakan"
+      },
+      {
+        "komoditas": "bawang_merah",
+        "label": "Bawang Merah",
+        "indeks_volatilitas": 10.21,
+        "harga_avg": 37962.44,
+        "jumlah_sebutan": 4,
+        "status_korelasi": "WASPADA: Harga bergejolak tapi minim liputan"
+      },
+      {
+        "komoditas": "telur",
+        "label": "Telur",
+        "indeks_volatilitas": 1.57,
+        "harga_avg": 29189.27,
         "jumlah_sebutan": 2,
+        "status_korelasi": "RENDAH: Stabil dan jarang diberitakan"
+      },
+      {
+        "komoditas": "jagung",
+        "label": "Jagung",
+        "indeks_volatilitas": 2.77,
+        "harga_avg": 5774.63,
+        "jumlah_sebutan": 1,
         "status_korelasi": "RENDAH: Stabil dan jarang diberitakan"
       },
       {
         "komoditas": "kedelai",
         "label": "Kedelai",
         "indeks_volatilitas": 1.83,
-        "harga_avg": 12059.14,
+        "harga_avg": 12054.51,
         "jumlah_sebutan": 0,
         "status_korelasi": "RENDAH: Stabil dan jarang diberitakan"
       }
