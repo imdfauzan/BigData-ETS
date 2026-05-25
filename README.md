@@ -16,17 +16,144 @@
 
 ---
 
-# Launch entire system
+## ⚡ Quick Start (Automated)
+
+Gunakan script master untuk menjalankan seluruh sistem dengan satu command:
+
+```bash
+# Navigate ke project directory
+cd /path/to/BigData-ETS
+
+# Start seluruh sistem (Docker + 5 komponen)
 ./RUN_ALL.sh start
 
-# Check status
+# Cek status semua komponen
 ./RUN_ALL.sh status
 
-# View live data flow
+# Buka dashboard di browser
+open http://localhost:5000
+
+# Watch live data flow untuk 60 detik
 ./RUN_ALL.sh demo
 
-# Stop everything
+# View logs (api|rss|consumer|spark|dashboard|all)
+./RUN_ALL.sh logs all
+
+# Stop seluruh sistem
 ./RUN_ALL.sh stop
+
+# Lihat dokumentasi lengkap
+./RUN_ALL.sh help
+```
+
+---
+
+## 🔧 Setup Manual (Detailed)
+
+Jika ingin setup komponen satu per satu untuk debugging:
+
+### Prerequisites
+- Python 3.9+
+- Docker & Docker Compose
+- Java 11+ (untuk Spark)
+- 4GB+ RAM available
+
+### Step 1: Infrastructure Setup
+
+```bash
+cd /path/to/BigData-ETS
+
+# Create custom network untuk inter-container communication
+docker network create bigdata-network
+
+# Start Hadoop HDFS
+docker-compose -f docker-compose-hadoop.yml up -d
+
+# Start Kafka & ZooKeeper
+docker-compose -f docker-compose-kafka.yml up -d
+
+sleep 20  # Tunggu containers ready
+
+# Setup HDFS directories
+docker exec -it namenode hdfs dfs -mkdir -p /data/pangan/{api,rss,hasil}
+docker exec -it namenode hdfs dfs -chmod -R 777 /data/pangan
+
+# Verify HDFS
+docker exec -it namenode hdfs dfs -ls /data/pangan/
+```
+
+### Step 2: Python Environment Setup
+
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate (Linux/Mac)
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### Step 3: Run Components (Open 5 Terminals)
+
+**Terminal 1 - Kafka Producer (API Prices):**
+```bash
+source venv/bin/activate
+python kafka/producer_api.py
+# Output: ✓ Sends 8 commodities every 30 minutes
+```
+
+**Terminal 2 - Kafka Producer (RSS News):**
+```bash
+source venv/bin/activate
+python kafka/producer_rss.py
+# Output: ✓ Collects 200+ articles continuously
+```
+
+**Terminal 3 - Consumer (Buffer to HDFS):**
+```bash
+source venv/bin/activate
+python kafka/consumer_to_hdfs.py
+# Output: ✓ Buffers 2 min, flushes to JSON files
+```
+
+**Terminal 4 - Spark Analysis (Optional - runs periodically):**
+```bash
+source venv/bin/activate
+python spark/analysis.py
+# Output: ✓ Generates 3 analyses every X minutes
+```
+
+**Terminal 5 - Dashboard:**
+```bash
+source venv/bin/activate
+python dashboard/app.py
+# Output: ✓ Starts on http://localhost:5000
+```
+
+### Step 4: Verification
+
+```bash
+# Check Kafka topics created
+docker exec kafka-broker kafka-topics.sh --list --bootstrap-server localhost:9092
+
+# Check messages in Kafka
+docker exec kafka-broker kafka-console-consumer.sh \
+  --topic pangan-api --from-beginning --bootstrap-server localhost:9092 | head -5
+
+# Check HDFS files
+docker exec namenode hdfs dfs -ls /data/pangan/api/
+
+# Test dashboard API
+curl http://localhost:5000/api/health
+curl http://localhost:5000/api/data | jq '.status'
+
+# Check dashboard UI
+curl http://localhost:5000/ | head -20
+```
+
+---
 
 ## 🎯 Topik: HargaPangan - Monitor Harga Komoditas Bahan Pokok
 
@@ -106,105 +233,7 @@ Pipeline Big Data end-to-end yang mengintegrasikan:
 
 ---
 
-## 🚀 Quick Start Guide
 
-### Prerequisites
-- Python 3.9+
-- Docker & Docker Compose
-- Java 11+ (untuk Spark)
-- 4GB+ RAM
-
-### Step 1: Infrastructure Setup
-
-```bash
-cd /path/to/BigData-ETS
-
-# Create network
-docker network create bigdata-network
-
-# Start infrastructure
-docker-compose -f docker-compose-hadoop.yml up -d
-docker-compose -f docker-compose-kafka.yml up -d
-
-sleep 20  # Wait for containers to be ready
-
-# Setup HDFS directories
-docker exec -it namenode hdfs dfs -mkdir -p /data/pangan/{api,rss,hasil}
-docker exec -it namenode hdfs dfs -chmod -R 777 /data/pangan
-
-# Verify
-docker exec -it namenode hdfs dfs -ls /data/pangan/
-```
-
-### Step 2: Python Setup
-
-```bash
-# Create virtual environment
-python -m venv venv
-
-# Activate
-source venv/bin/activate  # Linux/Mac
-# or
-venv\Scripts\activate     # Windows
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Step 3: Run Pipeline (5 Terminals)
-
-**Terminal 1 - Kafka Producer API:**
-```bash
-source venv/bin/activate
-python kafka/producer_api.py
-```
-
-**Terminal 2 - Kafka Producer RSS:**
-```bash
-source venv/bin/activate
-python kafka/producer_rss.py
-```
-
-**Terminal 3 - Consumer to HDFS:**
-```bash
-source venv/bin/activate
-python kafka/consumer_to_hdfs.py
-```
-
-**Terminal 4 - Spark Analysis (run periodically):**
-```bash
-source venv/bin/activate
-python spark/analysis.py
-```
-
-**Terminal 5 - Dashboard:**
-```bash
-source venv/bin/activate
-python dashboard/app.py
-# Open: http://localhost:5000
-```
-
-### Step 4: Verification
-
-```bash
-# Check Kafka topics
-docker exec kafka-broker kafka-topics.sh --list --bootstrap-server localhost:9092
-
-# Check data in Kafka
-docker exec kafka-broker kafka-console-consumer.sh \
-  --topic pangan-api --from-beginning --bootstrap-server localhost:9092 | head -3
-
-# Check HDFS files
-docker exec namenode hdfs dfs -ls /data/pangan/api/
-
-# Check Spark results
-curl http://localhost:5000/api/data | jq '.analisis_volatilitas'
-
-# Check Dashboard
-curl http://localhost:5000/
-```
-
----
 
 ## 📊 Data Format
 
@@ -291,28 +320,38 @@ curl http://localhost:5000/api/data | jq '.'
 ```
 BigData-ETS/
 ├── README.md                    # Main documentation
-├── ANALISIS_PROJECT.md          # Technical analysis
-├── .env                         # Configuration
+├── RUN_ALL.sh                   # Master control script
 ├── requirements.txt             # Python dependencies
+├── .env                         # Environment configuration
+├── .gitignore                   # Git ignore rules
 │
-├── docker-compose-hadoop.yml    # Hadoop infrastructure
-├── docker-compose-kafka.yml     # Kafka infrastructure
+├── docker-compose-hadoop.yml    # Hadoop HDFS infrastructure
+├── docker-compose-kafka.yml     # Kafka + ZooKeeper infrastructure
+├── hadoop.env                   # Hadoop environment variables
 │
 ├── kafka/
-│   ├── producer_api.py          # Price producer
-│   ├── producer_rss.py          # News producer
-│   └── consumer_to_hdfs.py      # Consumer
+│   ├── producer_api.py          # Real-time price producer
+│   ├── producer_rss.py          # News RSS producer
+│   └── consumer_to_hdfs.py      # Kafka consumer → HDFS buffering
 │
 ├── spark/
-│   └── analysis.py              # Analytics
+│   └── analysis.py              # Spark analytics (3 analyses)
 │
 ├── dashboard/
-│   ├── app.py                   # Flask app
-│   ├── templates/index.html     # UI
-│   ├── static/dashboard.js      # Charts
-│   └── data/                    # Output data
+│   ├── app.py                   # Flask REST API
+│   ├── templates/
+│   │   └── index.html           # Dashboard UI (Chart.js)
+│   ├── static/
+│   │   └── (CSS/JS assets)
+│   └── data/
+│       ├── live_api.json        # Real-time prices (buffered)
+│       ├── live_rss.json        # Real-time news (buffered)
+│       └── spark_results.json   # Analysis outputs
 │
-└── logs/                        # Application logs
+├── assets/
+│   └── Soal dan Ketentuan ETS BigData Kelompok 6.md  # Assignment specs
+│
+└── logs/                        # Application logs (gitignored)
 ```
 
 ---
@@ -329,18 +368,68 @@ BigData-ETS/
 
 ---
 
-## 📚 RSS Feeds Used
+## 📚 News Sources (RSS Feeds)
 
-- Primary: https://rss.bisnis.com/feed/rss2/ekonomi
-- Backup: https://rss.kompas.com/feed/kompas.com/money  
-- Tertiary: https://news.google.com/rss/search?q=harga+bahan+pangan
+Sistem menggunakan Google News RSS feeds untuk real-time news collection:
+
+```
+1. https://news.google.com/rss/search?q=harga+bahan+pangan&hl=id&gl=ID&ceid=ID:id
+2. https://news.google.com/rss/search?q=harga+pangan&hl=id&gl=ID&ceid=ID:id
+3. https://news.google.com/rss/search?q=komoditas+pangan&hl=id&gl=ID&ceid=ID:id
+```
+
+Features:
+- ✅ Automatic deduplication (tracking by article URL hash)
+- ✅ Commodity detection dari article title
+- ✅ 5-minute polling interval
+- ✅ User-Agent header untuk menghindari 403 errors
+- ✅ Retry logic (3 attempts dengan 2s backoff)
 
 ---
 
-## 📞 Support
+## � Documentation & Help
 
-Untuk detail teknis lengkap, baca **ANALISIS_PROJECT.md**
+**Quick Commands:**
+```bash
+# View full help
+./RUN_ALL.sh help
 
-**Status:** Production Ready ✅  
-**Last Updated:** 23 Mei 2026
+# View specific component logs
+./RUN_ALL.sh logs api      # View API producer logs
+./RUN_ALL.sh logs spark    # View Spark analysis logs
+
+# View all logs in real-time
+tail -f logs/*.log
+```
+
+**Troubleshooting:**
+- Kafka connection error? → Restart with `./RUN_ALL.sh stop` then `./RUN_ALL.sh start`
+- Dashboard not showing data? → Run `python spark/analysis.py` manually
+- HDFS issues? → Check `docker logs namenode`
+
+**Architecture Overview:**
+```
+Real-time Data Sources
+  ↓
+Apache Kafka (pangan-api, pangan-rss)
+  ↓
+Kafka Consumer (buffer 2 min)
+  ↓
+Hadoop HDFS + Local JSON files
+  ↓
+Apache Spark (3 analyses)
+  ↓
+Flask API + Dashboard UI
+```
+
+---
+
+## 📋 Status
+
+**Current:** Production Ready ✅  
+**Updated:** 25 Mei 2026  
+**Version:** v2 (Automated with RUN_ALL.sh)  
+**Git Status:** Cleaned repository (logs/ dan data/ gitignored)
+
+**Team:** Kelompok 6 - Big Data ETS
 

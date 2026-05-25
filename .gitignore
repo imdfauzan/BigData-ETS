@@ -1,7 +1,45 @@
+# Virtual environments
 .venv/
 venv/
 env/
+ENV/
+*.egg-info/
+
+# Environment variables
 .env
+.env.local
+
+# Generated files & logs
 logs/
 dashboard/data/
 spark-warehouse/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDE & editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Running processes
+.running_pids
+.running_processes
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Docker volumes & data
+.docker/
+
+# ADDITIONAL MARKDOWN
+lakehouse/QUICK_REFERENCE.md
+lakehouse/README_lakehouse.md

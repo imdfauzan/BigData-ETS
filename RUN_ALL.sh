@@ -256,6 +256,30 @@ start_dashboard() {
     fi
 }
 
+start_bronze_lakehouse() {
+    print_info "Starting Bronze Layer (lakehouse/01_bronze.py)..."
+    source "$VENV_PATH/bin/activate"
+    cd "$PROJECT_DIR"
+    
+    # Check if delta-spark is installed
+    if ! python -c "import delta" 2>/dev/null; then
+        print_warning "delta-spark not found, installing..."
+        pip install delta-spark==3.1.0 --quiet
+        print_success "delta-spark installed"
+    fi
+    
+    python lakehouse/01_bronze.py > "$LOGS_DIR/bronze.log" 2>&1 &
+    PID=$!
+    echo $PID >> "$PIDS_FILE"
+    
+    sleep 5
+    if kill -0 $PID 2>/dev/null; then
+        print_success "Bronze Layer started (PID: $PID)"
+    else
+        print_warning "Bronze Layer may still be initializing..."
+    fi
+}
+
 # ─────────────────────────────────────────────────────────────────────────────
 # MAIN COMMANDS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -267,7 +291,7 @@ cmd_start() {
     rm -f "$PIDS_FILE"
     
     # Kill any existing processes
-    pkill -f "python kafka\|python spark\|python dashboard" 2>/dev/null || true
+    pkill -f "python kafka\|python spark\|python dashboard\|python lakehouse" 2>/dev/null || true
     sleep 2
     
     # Check prerequisites
@@ -284,6 +308,11 @@ cmd_start() {
     start_consumer || exit 1
     
     sleep 5
+    
+    # Start Bronze Layer (reads from HDFS)
+    start_bronze_lakehouse || true
+    
+    sleep 3
     
     # Start analysis
     start_spark_analysis || true
@@ -311,7 +340,7 @@ cmd_stop() {
     
     # Stop Python processes
     print_info "Stopping Python processes..."
-    pkill -f "python kafka\|python spark\|python dashboard" 2>/dev/null || true
+    pkill -f "python kafka\|python spark\|python dashboard\|python lakehouse" 2>/dev/null || true
     
     sleep 2
     
@@ -363,6 +392,12 @@ cmd_status() {
         echo "  ✗ dashboard/app.py"
     fi
     
+    if ps aux | grep -q "01_bronze.py"; then
+        echo "  ✓ lakehouse/01_bronze.py $(ps aux | grep '01_bronze.py' | grep -v grep | awk '{print "PID", $2}')"
+    else
+        echo "  ✗ lakehouse/01_bronze.py"
+    fi
+    
     echo ""
     echo "📊 Dashboard:"
     if curl -s http://localhost:5000 > /dev/null 2>&1; then
@@ -376,6 +411,17 @@ cmd_status() {
     [ -f "$DATA_DIR/live_api.json" ] && echo "  ✓ live_api.json ($(wc -l < "$DATA_DIR/live_api.json") lines)" || echo "  ✗ live_api.json"
     [ -f "$DATA_DIR/live_rss.json" ] && echo "  ✓ live_rss.json ($(wc -l < "$DATA_DIR/live_rss.json") lines)" || echo "  ✗ live_rss.json"
     [ -f "$DATA_DIR/spark_results.json" ] && echo "  ✓ spark_results.json" || echo "  ✗ spark_results.json"
+    
+    echo ""
+    echo "🏠 Lakehouse (Bronze Layer):"
+    if [ -d "$PROJECT_DIR/lakehouse_data/bronze" ]; then
+        PARQUET_COUNT=$(find "$PROJECT_DIR/lakehouse_data/bronze" -type f -name "*.parquet" 2>/dev/null | wc -l)
+        echo "  ✓ Bronze layer exists ($(du -sh "$PROJECT_DIR/lakehouse_data/bronze" 2>/dev/null | cut -f1))"
+        echo "    • API data: $([ -d "$PROJECT_DIR/lakehouse_data/bronze/pangan_api" ] && echo "✓" || echo "✗")"
+        echo "    • RSS data: $([ -d "$PROJECT_DIR/lakehouse_data/bronze/pangan_rss" ] && echo "✓" || echo "✗")"
+    else
+        echo "  ✗ Bronze layer not created yet"
+    fi
     
     echo ""
 }
@@ -468,6 +514,10 @@ cmd_logs() {
             echo "📋 dashboard.log:"
             tail -n $tail_lines "$LOGS_DIR/dashboard.log"
             ;;
+        bronze)
+            echo "📋 bronze.log:"
+            tail -n $tail_lines "$LOGS_DIR/bronze.log"
+            ;;
         all)
             echo "📋 All logs (latest 20 lines each):"
             for log in "$LOGS_DIR"/*.log; do
@@ -490,11 +540,11 @@ ${GREEN}USAGE:${NC}
   $0 <command> [options]
 
 ${GREEN}COMMANDS:${NC}
-  start          Start all components (Docker, producers, consumer, Spark, dashboard)
+  start          Start all components (Docker, Kafka, Hadoop, producers, consumer, Bronze Layer, Spark, dashboard)
   stop           Stop all components gracefully
   status         Show status of all components
   demo           Watch live data flow for 60 seconds
-  logs [type]    View logs (api|rss|consumer|spark|dashboard|all)
+  logs [type]    View logs (api|rss|consumer|spark|dashboard|bronze|all)
   help           Show this help message
 
 ${GREEN}EXAMPLES:${NC}
@@ -510,6 +560,9 @@ ${GREEN}EXAMPLES:${NC}
   # View API producer logs
   $0 logs api
 
+  # View bronze layer logs
+  $0 logs bronze
+
   # View all logs
   $0 logs all
 
@@ -522,10 +575,18 @@ ${GREEN}DASHBOARD:${NC}
 ${GREEN}API ENDPOINT:${NC}
   http://localhost:5000/api/data
 
+${GREEN}LAKEHOUSE (BRONZE LAYER):${NC}
+  Location: ./lakehouse_data/bronze/
+  API Data: ./lakehouse_data/bronze/pangan_api/
+  RSS Data: ./lakehouse_data/bronze/pangan_rss/
+  Format: Delta Lake (Parquet + metadata)
+
 ${YELLOW}NOTES:${NC}
   • First start may take 30-60 seconds to initialize Kafka/Hadoop
+  • Bronze Layer runs automatically and reads data from HDFS
   • Logs are saved in: $LOGS_DIR/
   • Data files are saved in: $DATA_DIR/
+  • Lakehouse data is saved in: ./lakehouse_data/
 
 EOF
 }
