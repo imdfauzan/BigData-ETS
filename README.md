@@ -233,7 +233,47 @@ Pipeline Big Data end-to-end yang mengintegrasikan:
 
 ---
 
+## 🏠 Data Lakehouse Architecture (Medallion Architecture)
 
+Project ini mengimplementasikan konsep **Data Lakehouse** menggunakan **Delta Lake** dan **Apache Spark** dengan struktur Medallion (Bronze, Silver, Gold layer) untuk memproses data harga pangan dan berita real-time secara terstruktur.
+
+Komponen data lakehouse berada di folder `/lakehouse`:
+
+### 1. 🥉 Bronze Layer ([01_bronze.py](file:///home/oscar/tugas/BigData-ETS/lakehouse/01_bronze.py)) - Raw Data Ingestion
+*   **Tujuan**: Mengambil data mentah (raw data) langsung dari HDFS dan menyimpannya ke dalam format Delta Lake lokal dengan dependensi minimal.
+*   **Proses**:
+    *   Menginisialisasi Spark session dengan dukungan Delta Lake.
+    *   Membaca file data JSON mentah hasil stream buffer dari folder `/data/pangan/api/` dan `/data/pangan/rss/` di HDFS.
+    *   Menambahkan metadata audit dasar: `_ingested_at` (timestamp pengambilan) dan `_source` (asal data: `api` atau `rss`).
+    *   Menyimpan data mentah tersebut dengan format **Delta Lake** ke dalam path `./lakehouse_data/bronze/pangan_api` dan `./lakehouse_data/bronze/pangan_rss`.
+
+### 2. 🥈 Silver Layer ([02_silver.py](file:///home/oscar/tugas/BigData-ETS/lakehouse/02_silver.py)) - Data Cleaning & Transformation
+*   **Tujuan**: Membersihkan data (data cleaning), menstandardisasi nilai, memvalidasi integritas data berdasarkan domain bisnis HargaPangan, serta menambahkan fitur temporal.
+*   **Proses**:
+    *   Membaca data Delta dari Bronze layer.
+    *   **Pembersihan Data Pangan API**:
+        *   Menghapus duplikasi data berdasarkan kombinasi `message_id`, `komoditas`, dan `timestamp` untuk menangani duplikasi saat restart Kafka consumer.
+        *   Memfilter nilai `harga` agar berada dalam batas realistis komoditas pangan Indonesia (Rp 100 - Rp 1.000.000) dan memastikan tidak bernilai `null`.
+        *   Memfilter `komoditas` agar sesuai dengan daftar validasi komoditas pangan (`beras`, `jagung`, `kedelai`, `gula`, `minyak_goreng`, `cabai`, `bawang_merah`, `telur`, `umum`).
+        *   Melakukan *casting* tipe data `timestamp` dari string ke tipe `TimestampType`.
+        *   Mengekstrak fitur waktu: kolom `jam` (hour) dan `hari_minggu` (day of week) untuk analisis analitik temporal.
+        *   Menstandardisasi penulisan nama komoditas dengan *trimming* dan mengubah ke huruf kecil (*lowercase*).
+    *   **Pembersihan Data Pangan RSS (Berita)**:
+        *   Menghapus duplikat artikel berdasarkan URL unik (`link`).
+        *   Memastikan `title` dan `summary` artikel berita tidak kosong/null.
+        *   Memastikan kolom tag `komoditas` berisi nilai yang valid untuk pencocokan silang (cross-source join) di masa mendatang.
+        *   Memfilter tanggal terbit (`published`) yang tidak valid/corrupt.
+        *   Melakukan *casting* ke `TimestampType` dan mengekstrak fitur waktu `jam` dan `hari_minggu`.
+    *   **Audit Trail & Output**:
+        *   Mencatat statistik record data (jumlah row sebelum vs sesudah pembersihan) untuk setiap tahapan cleaning secara mendetail ke file log `./logs/lakehouse_silver.log`.
+        *   Menambahkan kolom penanda waktu pembersihan `_cleaned_at`.
+        *   Menyimpan data bersih dalam format Delta Lake Parquet terkompresi di `./lakehouse_data/silver/pangan_api` dan `./lakehouse_data/silver/pangan_rss`.
+
+### 3. 🥇 Gold Layer (Menyusul ⏳)
+*   **Tujuan**: Membuat agregasi data bisnis tingkat lanjut yang siap dikonsumsi oleh dashboard analitik atau kebutuhan pelaporan tingkat tinggi (analisis volatilitas harga harian/mingguan, deteksi anomali, korelasi sentimen berita pangan terhadap pergerakan harga komoditas).
+*   *Status: Sedang dalam tahap pengembangan (menyusul).*
+
+---
 
 ## 📊 Data Format
 
@@ -337,6 +377,12 @@ BigData-ETS/
 ├── spark/
 │   └── analysis.py              # Spark analytics (3 analyses)
 │
+├── lakehouse/
+│   ├── 00_setup.md              # Spark & Delta Lake environment setup
+│   ├── 01_bronze.py             # Bronze layer ingestion (Raw HDFS -> Delta)
+│   ├── 02_silver.py             # Silver layer cleaning & transformation
+│   └── README.md                # Lakehouse run instructions
+│
 ├── dashboard/
 │   ├── app.py                   # Flask REST API
 │   ├── templates/
@@ -421,6 +467,8 @@ Apache Spark (3 analyses)
   ↓
 Flask API + Dashboard UI
 ```
+
+
 
 ---
 
