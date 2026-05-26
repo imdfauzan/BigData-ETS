@@ -268,15 +268,43 @@ start_bronze_lakehouse() {
         print_success "delta-spark installed"
     fi
     
-    python lakehouse/01_bronze.py > "$LOGS_DIR/lakehouse_bronze.log" 2>&1 &
-    PID=$!
-    echo $PID >> "$PIDS_FILE"
+    python lakehouse/01_bronze.py > "$LOGS_DIR/lakehouse_bronze.log" 2>&1
     
-    sleep 5
-    if kill -0 $PID 2>/dev/null; then
-        print_success "Bronze Layer started (PID: $PID)"
+    if [ $? -eq 0 ]; then
+        print_success "Bronze Layer completed successfully"
     else
-        print_warning "Bronze Layer may still be initializing..."
+        print_error "Bronze Layer failed"
+        return 1
+    fi
+}
+
+start_silver_lakehouse() {
+    print_info "Starting Silver Layer (lakehouse/02_silver.py)..."
+    source "$VENV_PATH/bin/activate"
+    cd "$PROJECT_DIR"
+    
+    python lakehouse/02_silver.py > "$LOGS_DIR/lakehouse_silver.log" 2>&1
+    
+    if [ $? -eq 0 ]; then
+        print_success "Silver Layer completed successfully"
+    else
+        print_error "Silver Layer failed"
+        return 1
+    fi
+}
+
+start_gold_lakehouse() {
+    print_info "Starting Gold Layer (lakehouse/03_gold.py)..."
+    source "$VENV_PATH/bin/activate"
+    cd "$PROJECT_DIR"
+    
+    python lakehouse/03_gold.py > "$LOGS_DIR/lakehouse_gold.log" 2>&1
+    
+    if [ $? -eq 0 ]; then
+        print_success "Gold Layer completed successfully"
+    else
+        print_error "Gold Layer failed"
+        return 1
     fi
 }
 
@@ -518,6 +546,14 @@ cmd_logs() {
             echo "📋 lakehouse_bronze.log:"
             tail -n $tail_lines "$LOGS_DIR/lakehouse_bronze.log"
             ;;
+        silver)
+            echo "📋 lakehouse_silver.log:"
+            tail -n $tail_lines "$LOGS_DIR/lakehouse_silver.log"
+            ;;
+        gold)
+            echo "📋 lakehouse_gold.log:"
+            tail -n $tail_lines "$LOGS_DIR/lakehouse_gold.log"
+            ;;
         all)
             echo "📋 All logs (latest 20 lines each):"
             for log in "$LOGS_DIR"/*.log; do
@@ -544,12 +580,16 @@ ${GREEN}COMMANDS:${NC}
   stop           Stop all components gracefully
   status         Show status of all components
   demo           Watch live data flow for 60 seconds
-  logs [type]    View logs (api|rss|consumer|spark|dashboard|bronze|all)
+  logs [type]    View logs (api|rss|consumer|spark|dashboard|bronze|silver|gold|all)
+  lakehouse      Run complete Data Lakehouse pipeline (Bronze → Silver → Gold)
   help           Show this help message
 
 ${GREEN}EXAMPLES:${NC}
   # Start everything
   $0 start
+
+  # Run Lakehouse pipeline (Bronze → Silver → Gold)
+  $0 lakehouse
 
   # Check system status
   $0 status
@@ -560,8 +600,10 @@ ${GREEN}EXAMPLES:${NC}
   # View API producer logs
   $0 logs api
 
-  # View bronze layer logs
+  # View Lakehouse logs
   $0 logs bronze
+  $0 logs silver
+  $0 logs gold
 
   # View all logs
   $0 logs all
@@ -575,11 +617,21 @@ ${GREEN}DASHBOARD:${NC}
 ${GREEN}API ENDPOINT:${NC}
   http://localhost:5000/api/data
 
-${GREEN}LAKEHOUSE (BRONZE LAYER):${NC}
-  Location: ./lakehouse_data/bronze/
-  API Data: ./lakehouse_data/bronze/pangan_api/
-  RSS Data: ./lakehouse_data/bronze/pangan_rss/
-  Format: Delta Lake (Parquet + metadata)
+${GREEN}LAKEHOUSE (MEDALLION ARCHITECTURE):${NC}
+  Complete pipeline: ./lakehouse/
+  
+  Data layers:
+    • Bronze:  Raw data (./lakehouse_data/bronze/) - Delta Lake format
+    • Silver:  Cleaned data (./lakehouse_data/silver/) - Parquet format
+    • Gold:    Business-ready (./lakehouse_data/gold/) - Delta Lake with Time Travel
+  
+  Execute with:
+    $0 lakehouse
+  
+  Or manually:
+    python lakehouse/01_bronze.py
+    python lakehouse/02_silver.py
+    python lakehouse/03_gold.py
 
 ${YELLOW}NOTES:${NC}
   • First start may take 30-60 seconds to initialize Kafka/Hadoop
@@ -589,6 +641,102 @@ ${YELLOW}NOTES:${NC}
   • Lakehouse data is saved in: ./lakehouse_data/
 
 EOF
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LAKEHOUSE PIPELINE (Medallion Architecture)
+# ─────────────────────────────────────────────────────────────────────────────
+
+cmd_lakehouse() {
+    print_header "RUNNING DATA LAKEHOUSE PIPELINE"
+    print_info "Executing: Bronze → Silver → Gold (Medallion Architecture)"
+    
+    # Check prerequisites
+    check_prerequisites
+    
+    # Ensure ETS infrastructure is running
+    print_info ""
+    print_info "Verifying ETS infrastructure..."
+    if ! docker ps | grep -q namenode; then
+        print_warning "Hadoop namenode not running - starting Docker services..."
+        start_docker_services || {
+            print_error "Failed to start Docker services"
+            return 1
+        }
+        sleep 10
+    fi
+    
+    # Step 1: Bronze Layer
+    print_header "STEP 1: BRONZE LAYER (Raw Data Ingestion)"
+    print_info "Reading data from HDFS or local fallback..."
+    start_bronze_lakehouse || {
+        print_error "Bronze Layer failed!"
+        return 1
+    }
+    
+    echo ""
+    sleep 3
+    
+    # Step 2: Silver Layer
+    print_header "STEP 2: SILVER LAYER (Data Cleaning & Transformation)"
+    print_info "Cleaning, validating, and transforming data..."
+    start_silver_lakehouse || {
+        print_error "Silver Layer failed!"
+        return 1
+    }
+    
+    echo ""
+    sleep 3
+    
+    # Step 3: Gold Layer
+    print_header "STEP 3: GOLD LAYER (Aggregation & Analytics)"
+    print_info "Building business-ready aggregations and insights..."
+    start_gold_lakehouse || {
+        print_error "Gold Layer failed!"
+        return 1
+    }
+    
+    echo ""
+    
+    # Verification
+    print_header "VERIFICATION & RESULTS"
+    
+    echo ""
+    echo "📂 Lakehouse Structure:"
+    echo ""
+    
+    if [ -d "./lakehouse_data" ]; then
+        for layer in bronze silver gold; do
+            if [ -d "./lakehouse_data/$layer" ]; then
+                echo "  ✓ $layer/"
+                for table in ./lakehouse_data/$layer/*/; do
+                    table_name=$(basename "$table")
+                    if [ -f "$table/_delta_log/_version.txt" ] || [ "$(ls $table/*.parquet 2>/dev/null | wc -l)" -gt 0 ]; then
+                        size=$(du -sh "$table" 2>/dev/null | cut -f1)
+                        echo "      └─ $table_name ($size)"
+                    fi
+                done
+            fi
+        done
+    fi
+    
+    echo ""
+    echo "📊 Output Files:"
+    [ -f "./dashboard/data/spark_results.json" ] && echo "  ✓ spark_results.json ($(wc -c < "./dashboard/data/spark_results.json") bytes)" || echo "  ✗ spark_results.json"
+    
+    echo ""
+    echo "📋 Logs:"
+    [ -f "./logs/lakehouse_bronze.log" ] && echo "  ✓ lakehouse_bronze.log ($(wc -l < "./logs/lakehouse_bronze.log") lines)" || echo "  ✗ lakehouse_bronze.log"
+    [ -f "./logs/lakehouse_silver.log" ] && echo "  ✓ lakehouse_silver.log ($(wc -l < "./logs/lakehouse_silver.log") lines)" || echo "  ✗ lakehouse_silver.log"
+    [ -f "./logs/lakehouse_gold.log" ] && echo "  ✓ lakehouse_gold.log ($(wc -l < "./logs/lakehouse_gold.log") lines)" || echo "  ✗ lakehouse_gold.log"
+    
+    print_header "✓ LAKEHOUSE PIPELINE COMPLETED SUCCESSFULLY"
+    echo ""
+    echo "Next steps:"
+    echo "  • View logs: ./RUN_ALL.sh logs bronze|silver|gold"
+    echo "  • Check dashboard: http://localhost:5000"
+    echo "  • Inspect data: cat ./lakehouse_data/gold/pangan_volatility/_delta_log/*.json | jq"
+    echo ""
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -613,6 +761,9 @@ main() {
             ;;
         logs)
             cmd_logs "$2" "$3"
+            ;;
+        lakehouse)
+            cmd_lakehouse
             ;;
         help|--help|-h)
             cmd_help
