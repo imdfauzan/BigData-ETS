@@ -1,75 +1,56 @@
 # ⚙️ Setup Guide — Data Lakehouse Environment
 
-Complete setup instructions for Data Lakehouse pipeline (Bronze → Silver → Gold layers).
+Panduan Setup untuk Pipeline Data Lakehouse (Bronze → Silver → Gold layers).
 
 ---
 
-## 📋 Prerequisites
+## 📋 Persiapan
 
 - **Python 3.9+** 
-- **Java 11+** (for Spark)
-- **Docker & Docker Compose** (for Kafka, Hadoop, ZooKeeper)
-- **4GB+ RAM** available
+- **Java 11+** (untuk Spark)
+- **Docker & Docker Compose** (untuk Kafka, Hadoop, ZooKeeper)
+- **4GB+ RAM** Tersedia
 - **Existing ETS Infrastructure**: API Producer, RSS Producer, Consumer, Spark Analysis, Dashboard
 
 ---
 
-## 🔧 Step 1: Environment Setup
+## 🔧 Step 1: Setup Environment
 
-### 1a. Activate Virtual Environment
+### 1a. Aktifkan Virtual Environment
 
 ```bash
-cd /home/riverz/College/bigdata/BigData-ETS
-
-# Create venv (if not exists)
+# Buat venv (jika belum ada)
 python3 -m venv venv
 
-# Activate
+# Aktifkan
 source venv/bin/activate
-
-# Verify activation
-python --version  # Should be 3.9+
 ```
 
-### 1b. Install Required Packages
+### 1b. Install Package yang Dibutuhkan
 
 ```bash
-# Install all dependencies (including Delta Lake)
 pip install -r requirements.txt
-
-# Verify installations
-python -c "import pyspark; print('✓ PySpark installed')"
-python -c "import delta; print('✓ Delta Lake installed')"
-python -c "import pandas; print('✓ Pandas installed')"
-```
-
-**Key Packages for Lakehouse:**
-```
-pyspark>=3.3.0
-delta-spark==3.1.0
-kafka-python>=2.0.0
-pandas>=1.3.0
 ```
 
 ---
 
-## 🚀 Step 2: Start ETS Infrastructure
+## 🚀 Step 2: Jalankan ETS Infrastruktur
 
-**Make sure existing ETS pipeline is running** — Bronze layer reads from HDFS or local fallback.
+**Pastikan pipeline ETS sudah berjalan** — Bronze layer akan membaca dari HDFS atau local fallback.
 
 ```bash
-# Start all ETS services (Kafka, Hadoop, Spark, Dashboard)
+# Jalankan semua service ETS (Kafka, Hadoop, Spark, Dashboard)
 ./RUN_ALL.sh start
 
 # Verify services
 ./RUN_ALL.sh status
 
-# Wait 5-10 minutes untuk data flow ke accumulate
+# Tunggu 5-10 menit agar data mengalir ke accumulate
 # API Producer & RSS Producer harus running
 # Consumer harus buffer & flush ke HDFS/local
 ```
 
-**What should be running:**
+**Yang harus running:**
 - ✅ Kafka broker (pangan-api, pangan-rss topics)
 - ✅ Hadoop namenode + datanode
 - ✅ API Producer (sends price data every 30 min)
@@ -227,7 +208,6 @@ EOF
 
 # Expected output:
 # Records: X (should be <= Bronze count)
-# All timestamp columns should be proper format (not strings)
 ```
 
 ---
@@ -284,13 +264,13 @@ EOF
 
 ## ✅ Complete Pipeline Execution
 
-Once all setup complete, run full pipeline:
+Setelah semua setup selesai, jalankan full pipeline:
 
 ```bash
-# Automated via RUN_ALL.sh (recommended)
+# Via RUN_ALL.sh
 ./RUN_ALL.sh lakehouse
 
-# OR manually one-by-one
+# Atau secara manual satu per satu
 source venv/bin/activate
 python lakehouse/01_bronze.py && \
 python lakehouse/02_silver.py && \
