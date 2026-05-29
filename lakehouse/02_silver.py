@@ -107,45 +107,6 @@ def create_spark_session():
 
 
 # ─────────────────────────────────────────────
-# DELTA LOG HELPER
-# ─────────────────────────────────────────────
-
-def create_delta_log(output_path):
-    """Buat _delta_log directory dengan minimal JSON metadata untuk delta compatibility."""
-    import json
-    try:
-        delta_log_path = os.path.join(output_path, "_delta_log")
-        os.makedirs(delta_log_path, exist_ok=True)
-        
-        # Buat minimal transaction log JSON
-        transaction_log = {
-            "add": {
-                "path": None,
-                "size": None,
-                "modificationTime": None,
-                "dataChange": True,
-                "stats": None
-            },
-            "commitInfo": {
-                "timestamp": int(datetime.now().timestamp() * 1000),
-                "operation": "WRITE",
-                "operationParameters": {},
-                "isBlind": False
-            }
-        }
-        
-        log_file = os.path.join(delta_log_path, "00000000000000000000.json")
-        with open(log_file, "w") as f:
-            f.write(json.dumps(transaction_log) + "\n")
-        
-        logger.info(f"✓ Delta log directory created: {delta_log_path}")
-        return True
-    except Exception as e:
-        logger.warning(f"Gagal membuat delta log directory: {str(e)}")
-        return False
-
-
-# ─────────────────────────────────────────────
 # CLEANING HELPERS
 # ─────────────────────────────────────────────
 
@@ -220,7 +181,7 @@ def clean_pangan_api(spark):
 
     # Baca Bronze
     logger.info(f"Membaca Bronze: {BRONZE_API_PATH}")
-    df = spark.read.parquet(BRONZE_API_PATH)
+    df = spark.read.format("delta").load(BRONZE_API_PATH)
     count_bronze = df.count()
     logger.info(f"Bronze pangan_api: {count_bronze:,} records")
     logger.info("Schema Bronze:")
@@ -301,15 +262,13 @@ def clean_pangan_api(spark):
 
     count_silver = silver_df.count()
 
-    # Tulis ke Silver layer (parquet format)
+    # Tulis ke Silver layer (Delta format)
     logger.info(f"Menulis Silver pangan_api ke: {SILVER_API_PATH}")
     silver_df.write \
+        .format("delta") \
         .mode("overwrite") \
-        .parquet(SILVER_API_PATH)
-    logger.info("Silver pangan_api berhasil ditulis")
-    
-    # Buat delta log directory untuk compatibility
-    create_delta_log(SILVER_API_PATH)
+        .save(SILVER_API_PATH)
+    logger.info("Silver pangan_api berhasil ditulis dalam format Delta")
 
     print_cleaning_summary("pangan_api", count_bronze, count_silver, detail_steps)
 
@@ -358,7 +317,7 @@ def clean_pangan_rss(spark):
 
     # Baca Bronze
     logger.info(f"Membaca Bronze: {BRONZE_RSS_PATH}")
-    df = spark.read.parquet(BRONZE_RSS_PATH)
+    df = spark.read.format("delta").load(BRONZE_RSS_PATH)
     count_bronze = df.count()
     logger.info(f"Bronze pangan_rss: {count_bronze:,} records")
 
@@ -438,15 +397,13 @@ def clean_pangan_rss(spark):
 
     count_silver = silver_df.count()
 
-    # Tulis ke Silver layer (parquet format)
+    # Tulis ke Silver layer (Delta format)
     logger.info(f"Menulis Silver pangan_rss ke: {SILVER_RSS_PATH}")
     silver_df.write \
+        .format("delta") \
         .mode("overwrite") \
-        .parquet(SILVER_RSS_PATH)
-    logger.info("Silver pangan_rss berhasil ditulis")
-    
-    # Buat delta log directory untuk compatibility
-    create_delta_log(SILVER_RSS_PATH)
+        .save(SILVER_RSS_PATH)
+    logger.info("Silver pangan_rss berhasil ditulis dalam format Delta")
 
     print_cleaning_summary("pangan_rss", count_bronze, count_silver, detail_steps)
 
@@ -462,13 +419,54 @@ def demo_time_travel(spark):
     Demonstrasi Delta Lake Time Travel.
     Tunjukkan history tabel Silver dan kemampuan query versi lama.
     
-    NOTE: Disabled - requires delta JAR registration with pyspark 3.5.0
+    Fitur time travel memungkinkan query versi historis dari Delta table.
     """
     logger.info("")
     logger.info("=" * 60)
-    logger.info("SKIPPED: Delta Lake Time Travel — not available with parquet format")
+    logger.info("DELTA LAKE TIME TRAVEL DEMO")
     logger.info("=" * 60)
-    logger.warning("Time Travel demo skipped (requires delta data source registration)")
+    
+    try:
+        # Demo 1: Baca versi terbaru (default)
+        logger.info("Demo 1: Membaca versi terbaru Silver pangan_api")
+        df_latest = spark.read.format("delta").load(SILVER_API_PATH)
+        logger.info(f"  Versi terbaru: {df_latest.count():,} records")
+        
+        # Demo 2: Cek history versi
+        logger.info("Demo 2: Cek history versi Delta table")
+        history_df = spark.sql(f"DESCRIBE HISTORY delta.`{SILVER_API_PATH}`")
+        logger.info(f"  Jumlah versi: {history_df.count()} version(s)")
+        history_df.select("version", "timestamp", "operation").show(truncate=False)
+        
+        # Demo 3: Cross-join antara pangan_api dan pangan_rss
+        logger.info("Demo 3: Cross-join Silver pangan_api dan pangan_rss berdasarkan komoditas")
+        silver_api = spark.read.format("delta").load(SILVER_API_PATH)
+        silver_rss = spark.read.format("delta").load(SILVER_RSS_PATH)
+        
+        # Join berdasarkan komoditas untuk analisis korelasi
+        cross_join_result = silver_api.alias("api") \
+            .join(
+                silver_rss.alias("rss"),
+                on=col("api.komoditas") == col("rss.komoditas"),
+                how="inner"
+            ) \
+            .select(
+                col("api.komoditas"),
+                col("api.harga"),
+                col("api.timestamp").alias("api_timestamp"),
+                col("rss.title").alias("news_title"),
+                col("rss.timestamp").alias("rss_timestamp")
+            )
+        
+        cross_join_count = cross_join_result.count()
+        logger.info(f"  Hasil cross-join: {cross_join_count:,} records")
+        logger.info("  Sample cross-join results (first 5):")
+        cross_join_result.limit(5).show(truncate=True)
+        
+        logger.info("Time Travel demo selesai dengan sukses")
+        
+    except Exception as e:
+        logger.warning(f"Time Travel demo ada error (kemungkinan versi awal): {str(e)}")
 
 
 # ─────────────────────────────────────────────
@@ -479,7 +477,7 @@ def verify_silver_layer(spark, silver_path, source_name):
     """Verifikasi Silver layer: schema, record count, dan sample."""
     try:
         logger.info(f"Verifying Silver {source_name}...")
-        df = spark.read.parquet(silver_path)
+        df = spark.read.format("delta").load(silver_path)
 
         logger.info(f"Schema Silver ({source_name}):")
         df.printSchema()
